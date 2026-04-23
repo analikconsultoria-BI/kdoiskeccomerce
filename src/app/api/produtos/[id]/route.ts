@@ -3,9 +3,9 @@ import { getProdutoById, getEstoque } from '@/lib/bling';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = params.id;
+  const { id } = await params;
 
   try {
     const [productData, stockData] = await Promise.all([
