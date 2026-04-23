@@ -1,0 +1,48 @@
+"use client";
+
+import * as React from "react";
+import { Search } from "lucide-react";
+
+interface SearchBarProps extends React.FormHTMLAttributes<HTMLFormElement> {
+  placeholder?: string;
+  large?: boolean;
+  variant?: "default" | "glass";
+}
+
+export const SearchBar = ({ className = "", placeholder = "Buscar produtos...", large = false, variant = "default", ...props }: SearchBarProps) => {
+  const isGlass = variant === "glass";
+
+  return (
+    <form
+      className={`flex w-full group ${className}`}
+      onSubmit={(e) => e.preventDefault()}
+      {...props}
+    >
+      <div className="flex-1 relative flex items-center">
+        <div className={`absolute left-4 pointer-events-none transition-colors duration-300
+          ${isGlass ? "text-brand-300 group-focus-within:text-white" : "text-warm-400 group-focus-within:text-brand-500"}`}
+        >
+          <Search className="w-4 h-4" />
+        </div>
+        <input 
+          placeholder={placeholder}
+          className={`
+            w-full outline-none transition-all duration-300
+            ${large ? "py-4 text-lg rounded-l-xl pl-12 pr-4" : "py-2.5 rounded-l-[10px] pl-11 pr-4 text-sm"}
+            ${isGlass 
+              ? "bg-white/8 backdrop-blur-md border border-white/15 text-white placeholder:text-brand-300/60 focus:bg-white/12 focus:border-white/30" 
+              : "bg-white border border-warm-200 text-warm-900 placeholder:text-warm-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-50/50"
+            }
+          `}
+        />
+      </div>
+      <button 
+        type="submit"
+        className={`bg-brand-500 text-white font-bold flex items-center justify-center hover:bg-brand-600 transition-all
+        ${large ? "px-8 py-4 text-lg rounded-r-xl" : "px-5 py-2.5 rounded-r-[10px] text-sm"}`}
+      >
+        Buscar
+      </button>
+    </form>
+  );
+};
