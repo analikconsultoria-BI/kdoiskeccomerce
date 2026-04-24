@@ -9,15 +9,22 @@ export async function GET(request: NextRequest) {
   try {
     const lista = await getProdutos(pagina, limite, 86400);
     
-    // Busca os detalhes de cada produto em paralelo para obter as imagens (que não vêm na listagem)
-    // Usamos revalidate de 24h (86400) já que imagens não mudam sempre
-    const detalhes = await Promise.all(
-      lista.data.map((p: any) => 
-        getProdutoById(String(p.id), 86400)
-          .then(res => res.data)
-          .catch(() => p)
-      )
-    );
+    // Busca os detalhes em pedaços (chunks) para não estourar o limite de 429 do Bling
+    const detalhes: any[] = [];
+    const chunkSize = 5;
+    const items = lista.data || [];
+    
+    for (let i = 0; i < items.length; i += chunkSize) {
+      const chunk = items.slice(i, i + chunkSize);
+      const results = await Promise.all(
+        chunk.map((p: any) => 
+          getProdutoById(String(p.id), 86400)
+            .then(res => res.data)
+            .catch(() => p)
+        )
+      );
+      detalhes.push(...results);
+    }
 
     // Mapeia para o formato da interface Product do frontend
     const mappedProducts = detalhes.map((p: any) => ({
@@ -38,10 +45,10 @@ export async function GET(request: NextRequest) {
       soldCount: 0,
       shortDescription: p.descricaoCurta || '',
       benefits: [],
-      description: p.descricao || '',
+      description: p.descricaoCurta || p.descricaoComplementar || p.descricao || '',
       specifications: {},
       images: [
-        ...(p.midia?.imagens?.internas?.map((img: any) => img.linkMiniatura || img.link) || []),
+        ...(p.midia?.imagens?.internas?.map((img: any) => img.link) || []),
         ...(p.midia?.imagens?.externas?.map((img: any) => img.link) || []),
       ],
       inStock: p.situacao === 'A',

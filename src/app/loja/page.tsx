@@ -43,7 +43,7 @@ export default function Loja() {
   }, []);
 
   const filteredProducts = selectedCategory 
-    ? products.filter(p => p.idCategoria === selectedCategory || p.categoria?.id === selectedCategory)
+    ? products.filter(p => String(p.category?.id) === String(selectedCategory))
     : products;
 
   if (error) {

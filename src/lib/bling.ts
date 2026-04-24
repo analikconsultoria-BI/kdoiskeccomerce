@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache';
 
 const BLING_API_URL = 'https://www.bling.com.br/Api/v3';
 
-export async function blingFetch(path: string, options: RequestInit = {}, revalidate: number | false = 300) {
+export async function blingFetch(path: string, options: RequestInit = {}, revalidate: number | false = 300, retryCount = 0) {
   let token = process.env.BLING_ACCESS_TOKEN;
 
   const url = `${BLING_API_URL}${path}`;
@@ -17,20 +17,23 @@ export async function blingFetch(path: string, options: RequestInit = {}, revali
       revalidate: typeof revalidate === 'number' ? revalidate : undefined, 
       ...options.next 
     },
-    // Se revalidate for false, desativa o cache
     cache: revalidate === false ? 'no-store' : options.cache,
   };
 
   let response = await fetch(url, defaultOptions);
 
+  // Se atingir o limite (429), tenta novamente após um pequeno delay
+  if (response.status === 429 && retryCount < 3) {
+    const delay = (retryCount + 1) * 1000;
+    console.warn(`Bling Rate Limit hit. Retrying in ${delay}ms...`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return blingFetch(path, options, revalidate, retryCount + 1);
+  }
+
   if (response.status === 401) {
     console.warn('Bling Token Expired. Attempting refresh...');
-    
-    // Try to refresh the token
     const refreshResult = await refreshBlingToken();
-    
     if (refreshResult.success) {
-      // Retry with new token
       const newOptions = {
         ...defaultOptions,
         headers: {
@@ -110,6 +113,6 @@ export async function getCategorias(revalidate = 3600) {
   return blingFetch('/categorias/produtos', {}, revalidate);
 }
 
-export async function getEstoque(produtoId: string, revalidate: number | false = false) {
+export async function getEstoque(produtoId: string, revalidate: number | false = 60) {
   return blingFetch(`/estoques/saldos?idsProdutos[]=${produtoId}`, {}, revalidate);
 }

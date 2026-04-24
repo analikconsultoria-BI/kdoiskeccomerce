@@ -55,10 +55,10 @@ export async function GET(
       soldCount: 0,
       shortDescription: p.descricaoCurta || '',
       benefits: [],
-      description: p.descricao || '',
+      description: p.descricaoCurta || p.descricaoComplementar || p.descricao || '',
       specifications: {},
       images: [
-        ...(p.midia?.imagens?.internas?.map((img: any) => img.linkMiniatura || img.link) || []),
+        ...(p.midia?.imagens?.internas?.map((img: any) => img.link) || []),
         ...(p.midia?.imagens?.externas?.map((img: any) => img.link) || []),
       ],
       inStock: p.situacao === 'A' && hasStock,
