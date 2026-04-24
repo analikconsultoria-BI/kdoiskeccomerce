@@ -16,7 +16,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "KdoisK | Achou rápido. Resolveu. Comprou.",
+  title: "KdoisK",
   description: "E-commerce focado em agilidade e praticidade. Tudo o que você precisa resolver hoje.",
 };
 
