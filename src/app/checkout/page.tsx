@@ -52,6 +52,12 @@ export default function CheckoutPage() {
     }
   };
 
+  // Cálculo de valores
+  const subtotal = 455.90;
+  const freight = 0.00;
+  const discount = paymentMethod === "pix" ? subtotal * 0.05 : 0;
+  const total = subtotal + freight - discount;
+
   return (
     <div className="bg-warm-50 min-h-screen py-8 md:py-16 px-4">
       <div className="max-w-5xl mx-auto">

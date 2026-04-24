@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
 
     if (productId) {
       console.log(`Revalidating data for product: ${productId}`);
-      revalidatePath(`/produto/${productId}`);
-      revalidatePath('/loja');
-      revalidatePath('/'); // Home também pode ter produtos
+      revalidatePath(`/produto/${productId}`, 'page');
+      revalidatePath('/loja', 'page');
+      revalidatePath('/', 'page');
     }
 
     return NextResponse.json({ received: true });
