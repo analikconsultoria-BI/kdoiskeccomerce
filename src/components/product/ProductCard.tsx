@@ -13,13 +13,16 @@ interface ProductCardProps {
 export const ProductCard = ({ product }: ProductCardProps) => {
   const [isFavorite, setIsFavorite] = React.useState(false);
 
-  const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price);
+  const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price || 0);
   const formattedOriginalPrice = product.originalPrice 
     ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.originalPrice)
     : null;
 
   // Split price for Marketplace Style: Symbol + Large Int + Small Cents
   const priceParts = formattedPrice.replace('R$', '').trim().split(',');
+
+  // Handle images - Bling returns an array or single string depending on mapping
+  const productImage = product.images && product.images.length > 0 ? product.images[0] : "https://placehold.co/600x400/f3f4f6/666666?text=Imagem+Indisponivel";
 
   return (
     <Card className="flex flex-col gap-0 group relative h-full bg-white border-warm-100 shadow-sm hover:shadow-md p-0 overflow-hidden rounded-2xl transition-all duration-300">
@@ -34,13 +37,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         <Heart className={`w-4 h-4 transition-all ${isFavorite ? 'fill-red-500 text-red-500 scale-110' : ''}`} />
       </button>
 
-      <Link href={`/produto/${product.slug}`} className="flex flex-col h-full">
+      <Link href={`/produto/${product.id}`} className="flex flex-col h-full">
         {/* Marketplace Image - Clean centered look */}
         <div className="relative aspect-square bg-white flex items-center justify-center p-4 overflow-hidden">
           <img 
-            src="/placeholder.jpg" 
+            src={productImage} 
             alt={product.name} 
             className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-700" 
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/600x400/f3f4f6/666666?text=Imagem+Indisponivel" }}
           />
           
           {/* Marketplace Badges (Mercado Livre / Shopee style) */}
@@ -50,9 +54,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
               </div>
             )}
-            {product.badge === "Mais Vendido" && (
+            {product.badge && (
                <div className="bg-brand-900 text-white font-black text-[7px] px-1.5 py-0.5 rounded-r-md uppercase tracking-widest shadow-sm">
-                  Mais Vendido
+                  {product.badge}
                </div>
             )}
           </div>
@@ -74,14 +78,20 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           </h3>
 
           {/* Shopee/ML style Rating and Sales - Refined Density */}
-          <div className="flex items-center gap-1.5 mb-2">
-             <div className="flex items-center gap-0.5">
-                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                <span className="text-[11px] font-black text-brand-950">{product.rating.toFixed(1)}</span>
-             </div>
-             <span className="text-[10px] text-warm-300 font-light">|</span>
-             <span className="text-[11px] font-bold text-warm-500">{product.soldCount}+ vendidos</span>
-          </div>
+          {product.rating > 0 && (
+            <div className="flex items-center gap-1.5 mb-2">
+               <div className="flex items-center gap-0.5">
+                  <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                  <span className="text-[11px] font-black text-brand-950">{product.rating.toFixed(1)}</span>
+               </div>
+               {product.soldCount > 0 && (
+                 <>
+                   <span className="text-[10px] text-warm-300 font-light">|</span>
+                   <span className="text-[11px] font-bold text-warm-500">{product.soldCount}+ vendidos</span>
+                 </>
+               )}
+            </div>
+          )}
 
           {/* Pricing Section - Mercado Livre focus on Clarity */}
           <div className="mt-auto">
@@ -105,9 +115,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </div>
 
             {/* Clear Installments (Mercado Livre Style Benefit) */}
-            <div className="text-[11px] font-bold text-success mt-1">
-              <span className="font-black">{product.installments.count}x</span> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.installments.value)} <span className="font-medium">sem juros</span>
-            </div>
+            {product.installments ? (
+              <div className="text-[11px] font-bold text-success mt-1">
+                <span className="font-black">{product.installments.count}x</span> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.installments.value)} <span className="font-medium">sem juros</span>
+              </div>
+            ) : (
+              <div className="text-[11px] font-bold text-success mt-1">
+                <span className="font-black">12x</span> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((product.price || 0) / 12)} <span className="font-medium">sem juros</span>
+              </div>
+            )}
 
             {/* Shipping Slot - Always occupies space to keep grids aligned */}
             <div className="h-4 mt-1.5">

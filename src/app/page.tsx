@@ -11,7 +11,6 @@ export default function Home() {
       <FeaturedProducts />
       <NewArrivals />
       <FlashDeals />
-      <Testimonials />
       <ContactBanner />
       <TrustBadges variant="banner" />
     </>

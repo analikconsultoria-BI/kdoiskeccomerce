@@ -48,18 +48,28 @@ export const ProductInfo = ({ product }: ProductInfoProps) => {
         {product.name}
       </h1>
       
-      <div className="flex items-center gap-4 mb-6">
-        <div className="flex items-center gap-1.5 rounded-full">
-           <RatingStars rating={product.rating} size={14} />
-           <span className="text-xs font-black text-brand-900">{product.rating.toFixed(1)}</span>
+      {product.rating > 0 && (
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-1.5 rounded-full">
+             <RatingStars rating={product.rating} size={14} />
+             <span className="text-xs font-black text-brand-900">{product.rating.toFixed(1)}</span>
+          </div>
+          {product.reviewsCount > 0 && (
+            <>
+              <div className="h-3 w-px bg-warm-200" />
+              <span className="text-[11px] font-bold text-warm-500 uppercase tracking-widest underline underline-offset-4 decoration-warm-200">{product.reviewsCount} Avaliações</span>
+            </>
+          )}
+          {product.soldCount > 0 && (
+            <>
+              <div className="h-3 w-px bg-warm-200" />
+              <span className="text-[11px] font-black text-accent-600 uppercase tracking-widest flex items-center gap-1">
+                 <Check className="w-3.5 h-3.5" strokeWidth={3} /> {product.soldCount}+ Vendidos
+              </span>
+            </>
+          )}
         </div>
-        <div className="h-3 w-px bg-warm-200" />
-        <span className="text-[11px] font-bold text-warm-500 uppercase tracking-widest underline underline-offset-4 decoration-warm-200">{product.reviewsCount} Avaliações</span>
-        <div className="h-3 w-px bg-warm-200" />
-        <span className="text-[11px] font-black text-accent-600 uppercase tracking-widest flex items-center gap-1">
-           <Check className="w-3.5 h-3.5" strokeWidth={3} /> {product.soldCount}+ Vendidos
-        </span>
-      </div>
+      )}
 
       {/* Preços e Buy Box (Amazon/ML Style) */}
       <div className="bg-white md:bg-brand-50/30 md:rounded-[2.5rem] md:p-8 md:border border-brand-100/50 md:shadow-soft-sm mb-8 space-y-6">

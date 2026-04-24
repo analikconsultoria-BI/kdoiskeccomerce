@@ -97,10 +97,8 @@ export const ProductGallery = ({ images }: ProductGalleryProps) => {
         ))}
       </div>
 
-      <div className="hidden md:flex items-center justify-center gap-6 pt-4 grayscale opacity-40">
-         <img src="/icons/visa.svg" className="h-4 w-auto" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
-         <img src="/icons/mastercard.svg" className="h-4 w-auto" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
-         <img src="/icons/pix.svg" className="h-4 w-auto" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
+      <div className="hidden md:flex items-center justify-center gap-6 pt-4 text-[10px] font-black text-warm-300 uppercase tracking-widest opacity-60">
+         Compra 100% Segura
       </div>
     </div>
   );

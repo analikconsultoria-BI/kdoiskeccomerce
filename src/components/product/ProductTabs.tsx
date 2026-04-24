@@ -22,8 +22,8 @@ export const ProductTabs = ({ product }: ProductTabsProps) => {
         {[
           { id: "desc", label: "Descrição" },
           { id: "specs", label: "Especificações" },
-          { id: "reviews", label: `Avaliações (${product.reviewsCount})` }
-        ].map((tab) => (
+          { id: "reviews", label: `Avaliações (${product.reviewsCount})`, hidden: product.reviewsCount === 0 }
+        ].filter(tab => !tab.hidden).map((tab) => (
           <button
             key={tab.id}
             className={`pb-4 font-bold text-sm uppercase tracking-[0.2em] transition-all relative

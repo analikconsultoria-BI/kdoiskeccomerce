@@ -51,7 +51,7 @@ export default function Carrinho() {
                   {/* Imagem com gradiente de fundo */}
                   <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-linear-to-br from-brand-100 to-brand-50 flex items-center justify-center shrink-0 border border-brand-100/20">
                     <img 
-                      src="/placeholder.jpg" 
+                      src={item.product.images[0] || "https://placehold.co/600x400/f3f4f6/666666?text=Imagem+Indisponivel"} 
                       alt={item.product.name}
                       className="w-16 h-16 object-contain mix-blend-multiply opacity-80" 
                     />

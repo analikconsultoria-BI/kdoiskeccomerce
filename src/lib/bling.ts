@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache';
 
 const BLING_API_URL = 'https://www.bling.com.br/Api/v3';
 
-export async function blingFetch(path: string, options: RequestInit = {}) {
+export async function blingFetch(path: string, options: RequestInit = {}, revalidate: number | false = 300) {
   let token = process.env.BLING_ACCESS_TOKEN;
 
   const url = `${BLING_API_URL}${path}`;
@@ -13,7 +13,12 @@ export async function blingFetch(path: string, options: RequestInit = {}) {
       'Content-Type': 'application/json',
       ...options.headers,
     },
-    next: { revalidate: 300, ...options.next },
+    next: { 
+      revalidate: typeof revalidate === 'number' ? revalidate : undefined, 
+      ...options.next 
+    },
+    // Se revalidate for false, desativa o cache
+    cache: revalidate === false ? 'no-store' : options.cache,
   };
 
   let response = await fetch(url, defaultOptions);
@@ -93,18 +98,18 @@ export async function refreshBlingToken() {
 }
 
 // Helper functions
-export async function getProdutos(pagina = 1, limite = 100) {
-  return blingFetch(`/produtos?pagina=${pagina}&limite=${limite}`);
+export async function getProdutos(pagina = 1, limite = 100, revalidate = 300) {
+  return blingFetch(`/produtos?pagina=${pagina}&limite=${limite}`, {}, revalidate);
 }
 
-export async function getProdutoById(id: string) {
-  return blingFetch(`/produtos/${id}`);
+export async function getProdutoById(id: string, revalidate = 300) {
+  return blingFetch(`/produtos/${id}`, {}, revalidate);
 }
 
-export async function getCategorias() {
-  return blingFetch('/categorias/produtos');
+export async function getCategorias(revalidate = 3600) {
+  return blingFetch('/categorias/produtos', {}, revalidate);
 }
 
-export async function getEstoque(produtoId: string) {
-  return blingFetch(`/estoques/${produtoId}`);
+export async function getEstoque(produtoId: string, revalidate: number | false = false) {
+  return blingFetch(`/estoques/saldos?idsProdutos[]=${produtoId}`, {}, revalidate);
 }

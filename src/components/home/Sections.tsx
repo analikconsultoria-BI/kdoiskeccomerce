@@ -86,6 +86,19 @@ export const Hero = () => {
    ═════════════════════════════════════════════════ */
 
 export const CategoriesGrid = () => {
+  const [categories, setCategories] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/categorias', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        setCategories(data.slice(0, 3)); // Display top 3
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
   return (
     <section className="py-20 md:py-24 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -99,26 +112,30 @@ export const CategoriesGrid = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {mockCategories.map((category) => (
-            <Link key={category.id} href={`/loja?categoria=${category.slug}`}>
-              <Card hoverable className="h-full group p-0 overflow-hidden border-warm-100 odd:bg-warm-50/30">
-                <div className="w-full aspect-4/3 overflow-hidden">
-                  <img 
-                    src={category.image} 
-                    alt={category.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-8">
-                  <h3 className="text-xl font-bold text-warm-900 mb-2">{category.name}</h3>
-                  <p className="text-sm text-warm-500 mb-6 leading-relaxed">{category.description}</p>
-                  <span className="text-brand-600 font-bold text-sm inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    Ver produtos <ChevronRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </Card>
-            </Link>
-          ))}
+          {loading ? (
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="bg-gray-50 rounded-3xl h-96 animate-pulse" />
+            ))
+          ) : (
+            categories.map((category) => (
+              <Link key={category.id} href={`/loja`}>
+                <Card hoverable className="h-full group p-0 overflow-hidden border-warm-100 odd:bg-warm-50/30">
+                  <div className="w-full aspect-4/3 overflow-hidden bg-brand-50 flex items-center justify-center p-8">
+                    <div className="w-20 h-20 rounded-full bg-brand-100 flex items-center justify-center">
+                      <Archive className="w-10 h-10 text-brand-600" />
+                    </div>
+                  </div>
+                  <div className="p-8 text-center">
+                    <h3 className="text-xl font-bold text-warm-900 mb-2">{category.nome}</h3>
+                    <p className="text-sm text-warm-500 mb-6 leading-relaxed">Qualidade e tecnologia para sua audição.</p>
+                    <span className="text-brand-600 font-bold text-sm inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      Ver produtos <ChevronRight className="w-4 h-4" />
+                    </span>
+                  </div>
+                </Card>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </section>
@@ -130,7 +147,18 @@ export const CategoriesGrid = () => {
    ═════════════════════════════════════════════════ */
 
 export const FeaturedProducts = () => {
-  const featured = mockProducts.slice(0, 8);
+  const [products, setProducts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/produtos', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data.slice(0, 8));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   return (
     <section id="mais-vendidos" className="py-20 md:py-24 px-4 bg-warm-50">
@@ -146,9 +174,15 @@ export const FeaturedProducts = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6">
-          {featured.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {loading ? (
+             [...Array(8)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl h-80 animate-pulse" />
+             ))
+          ) : (
+            products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </div>
     </section>
@@ -289,7 +323,18 @@ export const FeaturedStory = () => {
    ═════════════════════════════════════════════════ */
 
 export const NewArrivals = () => {
-  const newProducts = mockProducts.slice(4, 8);
+  const [products, setProducts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/produtos', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data.slice(4, 8));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   return (
     <section className="py-20 md:py-24 px-4 bg-white">
@@ -305,9 +350,15 @@ export const NewArrivals = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6">
-          {newProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {loading ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl h-80 animate-pulse" />
+            ))
+          ) : (
+            products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </div>
     </section>
@@ -319,7 +370,18 @@ export const NewArrivals = () => {
    ═════════════════════════════════════════════════ */
 
 export const FlashDeals = () => {
-  const deals = mockProducts.slice(2, 6);
+  const [products, setProducts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/produtos', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data.slice(2, 6));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   return (
     <section className="py-24 px-4 bg-warm-900 relative overflow-hidden">
@@ -355,14 +417,17 @@ export const FlashDeals = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6">
-          {deals.map((product) => (
-            <div key={product.id} className="relative group">
-              <div className="absolute -top-1.5 -right-1.5 bg-accent-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg z-20 shadow-md">
-                -20%
+          {loading ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white/10 rounded-2xl h-80 animate-pulse" />
+            ))
+          ) : (
+            products.map((product) => (
+              <div key={product.id} className="relative group">
+                <ProductCard product={product} />
               </div>
-              <ProductCard product={product} />
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </section>

@@ -9,17 +9,61 @@ import { mockProducts } from "@/lib/mockData";
 
 export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = React.useState<"pix" | "card">("pix");
-  
-  // Resumo mockado
-  const subtotal = 455.90;
-  const freight = 0.00;
-  const discount = paymentMethod === "pix" ? subtotal * 0.05 : 0;
-  const total = subtotal + freight - discount;
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Itens do pedido (devem vir do seu carrinho real no futuro)
+  const orderItems = mockProducts.slice(0, 3).map((p) => ({
+    id: p.id,
+    name: p.name,
+    quantity: 1
+  }));
+
+  const handleCheckout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      console.log("Verificando estoque em tempo real...");
+      
+      // Verifica o estoque de cada item em paralelo
+      const stockChecks = await Promise.all(
+        orderItems.map(async (item) => {
+          const res = await fetch(`/api/produtos/${item.id}`, { cache: 'no-store' });
+          if (!res.ok) return { id: item.id, name: item.name, inStock: false };
+          const data = await res.json();
+          return { id: item.id, name: item.name, inStock: data.inStock };
+        })
+      );
+
+      const outOfStockItems = stockChecks.filter(item => !item.inStock);
+
+      if (outOfStockItems.length > 0) {
+        const itemNames = outOfStockItems.map(i => i.name).join(", ");
+        throw new Error(`Infelizmente os seguintes itens acabaram de esgotar: ${itemNames}`);
+      }
+
+      // Se tudo estiver OK, prossegue para o sucesso
+      window.location.href = "/sucesso";
+    } catch (err: any) {
+      setError(err.message);
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="bg-warm-50 min-h-screen py-8 md:py-16 px-4">
       <div className="max-w-5xl mx-auto">
         
+        {/* Erro de Estoque */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 animate-shake">
+            <ShieldCheck className="w-5 h-5 shrink-0" />
+            <p className="text-sm font-bold">{error}</p>
+          </div>
+        )}
+
         {/* Checkout Header Minimal */}
         <div className="flex items-center justify-between mb-10 pb-6 border-b border-brand-100/50">
           <Link href="/carrinho" className="flex items-center gap-2 text-xs font-bold text-brand-600 hover:text-brand-900 transition-colors uppercase tracking-widest">
@@ -161,7 +205,7 @@ export default function CheckoutPage() {
               
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-xs font-bold text-warm-400 uppercase tracking-widest">
-                  <span>Itens (3)</span>
+                  <span>Itens ({orderItems.length})</span>
                   <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-xs font-bold text-warm-400 uppercase tracking-widest">
@@ -185,11 +229,16 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              <Link href="/sucesso">
-                <Button size="lg" fullWidth className="h-14 tracking-[0.2em] font-black text-xs">
-                  CONCLUIR PEDIDO <ClipboardCheck className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                fullWidth 
+                className="h-14 tracking-[0.2em] font-black text-xs"
+                onClick={handleCheckout}
+                disabled={isProcessing}
+              >
+                {isProcessing ? "PROCESSANDO..." : "CONCLUIR PEDIDO"}
+                {!isProcessing && <ClipboardCheck className="w-4 h-4 ml-2" />}
+              </Button>
             </Card>
 
             <div className="p-6 rounded-2xl border-brand-100/50 bg-white/50 backdrop-blur-sm">
