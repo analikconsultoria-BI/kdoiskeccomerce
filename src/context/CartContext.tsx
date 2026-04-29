@@ -22,6 +22,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [initialized, setInitialized] = useState(false);
 
   // Carregar do localStorage
   useEffect(() => {
@@ -33,12 +34,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.error("Erro ao carregar carrinho", e);
       }
     }
+    setInitialized(true);
   }, []);
 
-  // Salvar no localStorage
+  // Salvar no localStorage apenas após inicializar
   useEffect(() => {
+    if (!initialized) return;
     localStorage.setItem('kdoisk-cart', JSON.stringify(cart));
-  }, [cart]);
+  }, [cart, initialized]);
 
   const addToCart = (product: any, quantity = 1) => {
     setCart(prev => {
