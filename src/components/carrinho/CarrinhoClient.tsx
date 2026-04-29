@@ -9,6 +9,13 @@ import { Card } from "@/components/ui/Card";
 
 export default function CarrinhoClient() {
   const { cart, updateQuantity, removeFromCart, subtotal } = useCart();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   const freight = cart.length > 0 ? (subtotal > 250 ? 0 : 19.90) : 0;
   const discount = subtotal * 0.05;
