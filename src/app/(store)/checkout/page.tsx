@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
+  const [mounted, setMounted] = React.useState(false);
   const { cart, subtotal } = useCart();
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = React.useState<"pix" | "card">("pix");
@@ -16,10 +17,18 @@ export default function CheckoutPage() {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (cart.length === 0) {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (mounted && cart.length === 0) {
       router.push('/carrinho');
     }
-  }, [cart, router]);
+  }, [cart, router, mounted]);
+
+  if (!mounted) {
+    return null;
+  }
 
   // Itens do pedido do carrinho real
   const orderItems = cart.map((item) => ({
