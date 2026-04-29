@@ -1,12 +1,14 @@
-import dynamic from 'next/dynamic';
+'use client';
+
+import dynamicImport from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
-const CheckoutClient = dynamic(() => import('@/components/checkout/CheckoutClient'), {
+const CheckoutClient = dynamicImport(() => import('@/components/checkout/CheckoutClient'), {
   ssr: false,
   loading: () => (
-    <div className="min-h-screen flex items-center justify-center bg-warm-50">
-      <div className="animate-pulse text-brand-300 font-black tracking-tighter text-4xl">KdoisK</div>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-pulse text-4xl">Carregando...</div>
     </div>
   ),
 });
