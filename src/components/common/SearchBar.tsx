@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 interface SearchBarProps extends React.FormHTMLAttributes<HTMLFormElement> {
   placeholder?: string;
@@ -10,7 +11,7 @@ interface SearchBarProps extends React.FormHTMLAttributes<HTMLFormElement> {
   variant?: "default" | "glass";
 }
 
-export const SearchBar = ({ className = "", placeholder = "Buscar produtos...", large = false, variant = "default", ...props }: SearchBarProps) => {
+export const SearchBarInner = ({ className = "", placeholder = "Buscar produtos...", large = false, variant = "default", ...props }: SearchBarProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = React.useState(searchParams.get("busca") || "");
@@ -59,5 +60,13 @@ export const SearchBar = ({ className = "", placeholder = "Buscar produtos...", 
         Buscar
       </button>
     </form>
+  );
+};
+
+export const SearchBar = (props: SearchBarProps) => {
+  return (
+    <Suspense fallback={<div className={`flex w-full group ${props.className || ""}`}><div className={`w-full bg-warm-100 animate-pulse ${props.large ? "h-14 rounded-xl" : "h-10 rounded-[10px]"}`}></div></div>}>
+      <SearchBarInner {...props} />
+    </Suspense>
   );
 };

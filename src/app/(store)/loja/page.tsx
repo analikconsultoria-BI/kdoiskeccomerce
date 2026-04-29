@@ -8,7 +8,9 @@ import { FiltersSidebar } from "@/components/shop/FiltersSidebar";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { Pagination } from "@/components/shop/Pagination";
 
-export default function Loja() {
+import { Suspense } from 'react';
+
+function LojaInner() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
   const [products, setProducts] = React.useState<any[]>([]);
   const [categories, setCategories] = React.useState<any[]>([]);
@@ -172,5 +174,17 @@ export default function Loja() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Loja() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-pulse text-2xl font-bold text-brand-300">Carregando loja...</div>
+      </div>
+    }>
+      <LojaInner />
+    </Suspense>
   );
 }
