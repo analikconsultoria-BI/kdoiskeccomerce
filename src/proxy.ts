@@ -29,7 +29,7 @@ function checkRateLimit(ip: string, route: string, maxRequests: number, windowMs
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+  const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for') || 'unknown';
 
   // --- RATE LIMITING ---
   if (pathname.startsWith('/api/bling/callback')) {
