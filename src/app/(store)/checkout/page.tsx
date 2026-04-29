@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import * as React from "react";
 import Link from "next/link";
 import { ShieldCheck, Truck, CreditCard, QrCode, ClipboardCheck, ArrowLeft, Lock } from "lucide-react";
@@ -8,8 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 
-export default function CheckoutPage() {
-  const [mounted, setMounted] = React.useState(false);
+function CheckoutContent() {
   const { cart, subtotal } = useCart();
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = React.useState<"pix" | "card">("pix");
@@ -17,23 +17,15 @@ export default function CheckoutPage() {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  React.useEffect(() => {
-    if (mounted && cart.length === 0) {
+    if (cart.length === 0) {
       router.push('/carrinho');
     }
-  }, [cart, router, mounted]);
-
-  if (!mounted) {
-    return null;
-  }
+  }, [cart, router]);
 
   // Itens do pedido do carrinho real
   const orderItems = cart.map((item) => ({
     id: item.id,
-    name: item.product.name,
+    name: item.product?.name || "Produto",
     quantity: item.quantity
   }));
 
@@ -45,7 +37,6 @@ export default function CheckoutPage() {
     try {
       console.log("Verificando estoque em tempo real...");
       
-      // Verifica o estoque de cada item em paralelo
       const stockChecks = await Promise.all(
         orderItems.map(async (item) => {
           const res = await fetch(`/api/produtos/${item.id}`, { cache: 'no-store' });
@@ -62,7 +53,6 @@ export default function CheckoutPage() {
         throw new Error(`Infelizmente os seguintes itens acabaram de esgotar: ${itemNames}`);
       }
 
-      // Se tudo estiver OK, prossegue para o sucesso
       window.location.href = "/sucesso";
     } catch (err: any) {
       setError(err.message);
@@ -70,16 +60,16 @@ export default function CheckoutPage() {
     }
   };
 
-  // Cálculo de valores dinâmicos
   const freight = subtotal > 250 ? 0 : 19.90;
   const discount = paymentMethod === "pix" ? subtotal * 0.05 : 0;
   const total = subtotal + freight - discount;
+
+  if (cart.length === 0) return null;
 
   return (
     <div className="bg-warm-50 min-h-screen py-8 md:py-16 px-4">
       <div className="max-w-5xl mx-auto">
         
-        {/* Erro de Estoque */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3 animate-shake">
             <ShieldCheck className="w-5 h-5 shrink-0" />
@@ -87,7 +77,6 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        {/* Checkout Header Minimal */}
         <div className="flex items-center justify-between mb-10 pb-6 border-b border-brand-100/50">
           <Link href="/carrinho" className="flex items-center gap-2 text-xs font-bold text-brand-600 hover:text-brand-900 transition-colors uppercase tracking-widest">
             <ArrowLeft className="w-4 h-4" /> Voltar ao carrinho
@@ -102,11 +91,7 @@ export default function CheckoutPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
-          
-          {/* Main Form Area */}
           <div className="space-y-6">
-            
-            {/* 1. Identificação */}
             <Card className="p-8">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center font-black text-sm">1</div>
@@ -124,7 +109,6 @@ export default function CheckoutPage() {
               </div>
             </Card>
 
-            {/* 2. Entrega */}
             <Card className="p-8">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center font-black text-sm">2</div>
@@ -163,7 +147,6 @@ export default function CheckoutPage() {
               </div>
             </Card>
 
-            {/* 3. Pagamento */}
             <Card className="p-8">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center font-black text-sm">3</div>
@@ -221,7 +204,6 @@ export default function CheckoutPage() {
             </Card>
           </div>
 
-          {/* Right Summary Sidebar */}
           <aside className="sticky top-28 space-y-4">
             <Card className="p-6 border-brand-100/40 bg-warm-white shadow-(--shadow-card)">
               <h3 className="font-bold text-brand-900 mb-6 uppercase tracking-widest text-xs">Resumo do Pedido</h3>
@@ -274,9 +256,19 @@ export default function CheckoutPage() {
                </p>
             </div>
           </aside>
-
         </div>
       </div>
     </div>
   );
 }
+
+const CheckoutPage = dynamic(() => Promise.resolve(CheckoutContent), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center bg-warm-50">
+      <div className="animate-pulse text-brand-300 font-black tracking-tighter text-4xl">KdoisK</div>
+    </div>
+  )
+});
+
+export default CheckoutPage;

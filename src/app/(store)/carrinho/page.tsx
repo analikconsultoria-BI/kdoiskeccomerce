@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import * as React from "react";
 import Link from "next/link";
 import { X, Minus, Plus, Truck, ShieldCheck, ArrowRight, ShoppingCart } from "lucide-react";
@@ -7,17 +8,9 @@ import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
-export default function Carrinho() {
-  const [mounted, setMounted] = React.useState(false);
+// O componente real do carrinho
+function CarrinhoContent() {
   const { cart, updateQuantity, removeFromCart, subtotal } = useCart();
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null; // Evita erros de pré-renderização/hidratação
-  }
 
   const freight = cart.length > 0 ? (subtotal > 250 ? 0 : 19.90) : 0;
   const discount = subtotal * 0.05;
@@ -69,13 +62,13 @@ export default function Carrinho() {
           {/* Listagem de Produtos */}
           <div className="space-y-4">
             {cart.map((item) => (
-              <Card key={item.product.id} className="p-0 overflow-hidden border-brand-100/50">
+              <Card key={item.id || item.product.id} className="p-0 overflow-hidden border-brand-100/50">
                 <div className="flex flex-col sm:flex-row items-center p-5 gap-6">
                   {/* Imagem com gradiente de fundo */}
                   <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-linear-to-br from-brand-100 to-brand-50 flex items-center justify-center shrink-0 border border-brand-100/20">
                     <img 
-                      src={item.product.images[0] || "https://placehold.co/600x400/f3f4f6/666666?text=Imagem+Indisponivel"} 
-                      alt={item.product.name}
+                      src={item.product?.images?.[0] || "https://placehold.co/600x400/f3f4f6/666666?text=Imagem+Indisponivel"} 
+                      alt={item.product?.name || "Produto"}
                       className="w-16 h-16 object-contain mix-blend-multiply opacity-80" 
                     />
                   </div>
@@ -84,15 +77,17 @@ export default function Carrinho() {
                   <div className="flex-1 w-full text-center sm:text-left">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
                       <div>
-                        <Link href={`/produto/${item.product.slug}`} className="text-lg font-bold text-brand-900 hover:text-brand-700 transition-colors block leading-tight">
-                          {item.product.name}
+                        <Link href={`/produto/${item.product?.slug}`} className="text-lg font-bold text-brand-900 hover:text-brand-700 transition-colors block leading-tight">
+                          {item.product?.name}
                         </Link>
-                        <span className="text-[11px] font-bold text-warm-400 uppercase tracking-wider mt-1 block">
-                          Marca: {item.product.specifications["Marca"]}
-                        </span>
+                        {item.product?.specifications?.["Marca"] && (
+                          <span className="text-[11px] font-bold text-warm-400 uppercase tracking-wider mt-1 block">
+                            Marca: {item.product.specifications["Marca"]}
+                          </span>
+                        )}
                       </div>
                       <span className="text-xl font-black text-brand-900">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.product.price)}
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.product?.price || 0)}
                       </span>
                     </div>
 
@@ -103,7 +98,7 @@ export default function Carrinho() {
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           className="w-8 h-8 flex items-center justify-center text-brand-700 hover:bg-white rounded-full transition-all shadow-sm active:scale-95"
                         >
-                          <Minus className="w-4 h-4" />
+                          <X className="w-3 h-3" />
                         </button>
                         <span className="w-10 text-center font-bold text-brand-900 text-sm">
                           {item.quantity}
@@ -208,3 +203,15 @@ export default function Carrinho() {
     </div>
   );
 }
+
+// Exportação dinâmica para desabilitar SSR completamente nesta página
+const CarrinhoPage = dynamic(() => Promise.resolve(CarrinhoContent), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center bg-warm-50">
+      <div className="animate-pulse text-brand-300 font-black tracking-tighter text-4xl">KdoisK</div>
+    </div>
+  )
+});
+
+export default CarrinhoPage;
