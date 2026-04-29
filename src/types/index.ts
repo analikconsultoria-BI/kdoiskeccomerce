@@ -41,6 +41,8 @@ export interface Product {
   originalPrice?: number;
   freeShipping?: boolean;
   deliveryDays?: number;
+  link_shopee?: string;
+  link_mercadolivre?: string;
 }
 
 export interface CartItem {

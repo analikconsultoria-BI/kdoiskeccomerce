@@ -4,11 +4,26 @@ import * as React from "react";
 import Link from "next/link";
 import { Search, ShoppingCart, User, Menu, X, Battery, Ear, Archive } from "lucide-react";
 import { SearchBar } from "../common/SearchBar";
+import { useCart } from "@/context/CartContext";
 
 export const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
-  const cartItemCount = 3;
+  const [categories, setCategories] = React.useState<any[]>([]);
+  const { itemCount } = useCart();
+
+  React.useEffect(() => {
+    fetch('/api/categorias', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else {
+          console.error("Dados de categorias inválidos:", data);
+        }
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   return (
     <div className="sticky top-0 z-50 flex flex-col">
@@ -50,9 +65,9 @@ export const Header = () => {
               className="p-2.5 text-brand-600 hover:text-brand-800 hover:bg-brand-50 rounded-xl transition-all relative group"
             >
               <ShoppingCart className="w-5 h-5" />
-              {cartItemCount > 0 && (
+              {itemCount > 0 && (
                 <span className="absolute top-0 right-0 bg-accent-500 text-white text-[10px] font-black w-[18px] h-[18px] rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
-                  {cartItemCount}
+                  {itemCount}
                 </span>
               )}
             </Link>
@@ -77,18 +92,14 @@ export const Header = () => {
       {/* ── Category Bar (Soft Purple Tint) ── */}
       <div className="hidden md:block bg-brand-50/80 backdrop-blur-sm border-b border-brand-100/50 relative z-40 py-2.5">
         <nav className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-center gap-10">
-          {[
-            { icon: Battery, label: "Pilhas & Baterias", href: "/loja?categoria=pilhas-e-baterias" },
-            { icon: Ear, label: "Aparelhos Auditivos", href: "/loja?categoria=aparelhos-auditivos" },
-            { icon: Archive, label: "Utilidades", href: "/loja?categoria=utilidades-do-dia" },
-          ].map((item) => (
+          {categories.map((item) => (
             <Link
-              key={item.label}
-              href={item.href}
+              key={item.id}
+              href={item.link}
               className="flex items-center gap-2.5 py-1.5 text-[13px] font-bold text-brand-900/70 transition-all hover:text-brand-900 group"
             >
-              <item.icon className="w-4 h-4 text-brand-400 group-hover:text-brand-600" strokeWidth={2} />
-              {item.label}
+              <Archive className="w-4 h-4 text-brand-400 group-hover:text-brand-600" strokeWidth={2} />
+              {item.nome}
             </Link>
           ))}
 
@@ -137,7 +148,7 @@ export const Header = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Ver Carrinho
-                <span className="bg-accent-500 text-white text-xs px-2.5 py-1 rounded-full">{cartItemCount} itens</span>
+                <span className="bg-accent-500 text-white text-xs px-2.5 py-1 rounded-full">{itemCount} itens</span>
               </Link>
             </nav>
           </div>

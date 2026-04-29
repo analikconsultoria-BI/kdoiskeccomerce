@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { Battery, Ear, Archive, Truck, ShieldCheck, RefreshCw, Headphones, Check, ChevronLeft, ChevronRight, Stethoscope, HeartPulse, Quote } from "lucide-react";
 import { SearchBar } from "../common/SearchBar";
-import { mockCategories, mockProducts, mockReviews } from "@/lib/mockData";
 import { ProductCard } from "../product/ProductCard";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -15,22 +14,33 @@ import { RatingStars } from "../common/RatingStars";
    ═════════════════════════════════════════════════ */
 
 export const Hero = () => {
+  const [slides, setSlides] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
 
-  const slides = [
-    { image: "/banners/1.png" },
-    { image: "/banners/2.png" },
-    { image: "/banners/3.png" },
-  ];
+  React.useEffect(() => {
+    fetch('/api/banners?local=home', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setSlides(data);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   React.useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
   }, [isPaused, slides.length]);
+
+  if (loading) return <div className="w-full h-[300px] md:h-[450px] lg:h-[550px] bg-warm-100 animate-pulse" />;
+  if (slides.length === 0) return null;
 
   return (
     <section
@@ -46,8 +56,9 @@ export const Hero = () => {
           `}
         >
           <div 
-            className="w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${slide.image})` }}
+            className="w-full h-full bg-cover bg-center bg-no-repeat cursor-pointer"
+            style={{ backgroundImage: `url(${slide.imagem_url})` }}
+            onClick={() => slide.link_url && (window.location.href = slide.link_url)}
           />
         </div>
       ))}
@@ -93,7 +104,9 @@ export const CategoriesGrid = () => {
     fetch('/api/categorias', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        setCategories(data.slice(0, 3)); // Display top 3
+        if (Array.isArray(data)) {
+          setCategories(data);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -111,25 +124,41 @@ export const CategoriesGrid = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {loading ? (
             [...Array(3)].map((_, i) => (
               <div key={i} className="bg-gray-50 rounded-3xl h-96 animate-pulse" />
             ))
           ) : (
             categories.map((category) => (
-              <Link key={category.id} href={`/loja`}>
-                <Card hoverable className="h-full group p-0 overflow-hidden border-warm-100 odd:bg-warm-50/30">
-                  <div className="w-full aspect-4/3 overflow-hidden bg-brand-50 flex items-center justify-center p-8">
-                    <div className="w-20 h-20 rounded-full bg-brand-100 flex items-center justify-center">
-                      <Archive className="w-10 h-10 text-brand-600" />
-                    </div>
+              <Link key={category.id} href={category.link}>
+                <Card hoverable className="group p-0 overflow-hidden border-warm-100 flex flex-col h-full bg-white">
+                  {/* Image Area */}
+                  <div className="relative h-64 overflow-hidden">
+                    {category.imagem ? (
+                      <img 
+                        src={category.imagem} 
+                        alt={category.nome} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-brand-50 flex items-center justify-center">
+                        <Archive className="w-12 h-12 text-brand-200" />
+                      </div>
+                    )}
                   </div>
-                  <div className="p-8 text-center">
-                    <h3 className="text-xl font-bold text-warm-900 mb-2">{category.nome}</h3>
-                    <p className="text-sm text-warm-500 mb-6 leading-relaxed">Qualidade e tecnologia para sua audição.</p>
-                    <span className="text-brand-600 font-bold text-sm inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                      Ver produtos <ChevronRight className="w-4 h-4" />
+
+                  {/* Text Content Below */}
+                  <div className="p-8 text-center flex flex-col items-center">
+                    <h3 className="text-xl font-extrabold text-brand-950 mb-2 uppercase tracking-tight group-hover:text-brand-600 transition-colors">
+                      {category.nome}
+                    </h3>
+                    <p className="text-xs text-warm-500 mb-6 font-medium leading-relaxed">
+                      Explore nossa linha premium de produtos para {category.nome.toLowerCase()}.
+                    </p>
+                    <div className="w-12 h-1 bg-brand-100 mb-6 group-hover:w-20 group-hover:bg-brand-500 transition-all duration-500" />
+                    <span className="text-brand-600 font-black text-[10px] uppercase tracking-[0.2em] inline-flex items-center gap-2">
+                      Ver Coleção <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                     </span>
                   </div>
                 </Card>
@@ -154,7 +183,9 @@ export const FeaturedProducts = () => {
     fetch('/api/produtos', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        setProducts(data.slice(0, 8));
+        if (Array.isArray(data)) {
+          setProducts(data.slice(0, 8));
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -220,103 +251,7 @@ export const Benefits = () => {
   );
 };
 
-/* ═════════════════════════════════════════════════
-   DEPOIMENTOS — Clean & Trust
-   ═════════════════════════════════════════════════ */
-
-export const Testimonials = () => {
-  const testimonials = mockReviews.slice(0, 3);
-
-  return (
-    <section className="py-24 px-4 bg-warm-50/50">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold text-warm-900 text-center mb-16 tracking-tight">
-          Confiança de quem já usa
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((review) => (
-            <Card key={review.id} className="bg-white border-warm-100/50 shadow-sm flex flex-col gap-5 p-8">
-              <RatingStars rating={review.rating} size={16} />
-              <p className="text-warm-600 italic text-[15px] leading-relaxed">
-                &ldquo;{review.content}&rdquo;
-              </p>
-              <div className="pt-4 border-t border-warm-50 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-warm-100 flex items-center justify-center font-bold text-warm-600 text-sm">
-                  {review.author.charAt(0)}
-                </div>
-                <div>
-                  <div className="font-bold text-warm-900 text-sm">{review.author}</div>
-                  <div className="text-[10px] text-accent-600 flex items-center gap-1 font-black uppercase tracking-widest">
-                    <Check className="w-3 h-3" strokeWidth={3} /> Cliente Verificado
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-/* ═════════════════════════════════════════════════
-   HISTÓRIA EM DESTAQUE (FEAT. TESTIMONIAL)
-   ═════════════════════════════════════════════════ */
-
-export const FeaturedStory = () => {
-  return (
-    <section className="py-24 px-4 bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="relative">
-            <div className="absolute -top-10 -left-10 w-40 h-40 bg-brand-100 rounded-full blur-3xl opacity-50 animate-pulse" />
-            <div className="relative rounded-[3rem] overflow-hidden shadow-2xl border-8 border-warm-50 group">
-              <img 
-                src="/customers/testimonial-1.png" 
-                alt="Sra. Helena"
-                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-brand-950/40 to-transparent" />
-            </div>
-            <div className="absolute -bottom-6 -right-6 bg-accent-500 text-white p-6 rounded-3xl shadow-xl hidden md:block">
-               <div className="text-3xl font-black mb-1">100%</div>
-               <div className="text-[10px] font-bold uppercase tracking-widest opacity-80">De Proteção</div>
-            </div>
-          </div>
-          
-          <div className="flex flex-col gap-8">
-            <div className="w-16 h-1.5 bg-brand-500 rounded-full" />
-            <div className="space-y-6">
-              <Quote className="w-12 h-12 text-brand-200 fill-brand-200/20" />
-              <h2 className="text-4xl md:text-6xl font-black text-brand-950 leading-[1.1] tracking-tighter">
-                "Meu aparelho nunca mais parou de funcionar."
-              </h2>
-              <p className="text-xl text-warm-600 leading-relaxed font-medium">
-                A Sra. Helena, de 68 anos, sofria com o entupimento constante do seu aparelho. Com os nossos protetores de cera, ela garante a vida útil do seu dispositivo e evita manutenções caras.
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-6 p-6 bg-brand-50 rounded-3xl border border-brand-100">
-               <div className="space-y-1">
-                  <div className="font-bold text-brand-950 text-lg">Sra. Helena de Oliveira</div>
-                  <div className="text-xs text-brand-600 font-bold uppercase tracking-widest flex items-center gap-1">
-                     <Check className="w-3.5 h-3.5" strokeWidth={3} /> Cliente KdoisK | Prot. de Cera
-                  </div>
-               </div>
-            </div>
-
-            <Link href="/loja">
-              <Button size="lg" className="h-16 px-10 rounded-2xl text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-950/20 w-fit">
-                Ver Protetores de Cera
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
+// Seções removidas por conterem dados fictícios (Testimonials, FeaturedStory)
 
 /* ═════════════════════════════════════════════════
    LANÇAMENTOS
@@ -330,7 +265,9 @@ export const NewArrivals = () => {
     fetch('/api/produtos', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        setProducts(data.slice(4, 8));
+        if (Array.isArray(data)) {
+          setProducts(data.slice(4, 8));
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -372,15 +309,33 @@ export const NewArrivals = () => {
 export const FlashDeals = () => {
   const [products, setProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [timeLeft, setTimeLeft] = React.useState({ hrs: "00", min: "00", seg: "00" });
 
   React.useEffect(() => {
     fetch('/api/produtos', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        setProducts(data.slice(2, 6));
+        if (Array.isArray(data)) {
+          setProducts(data.slice(2, 6));
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    const timer = setInterval(() => {
+      const now = new Date();
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      const diff = endOfDay.getTime() - now.getTime();
+      
+      const hrs = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+      const min = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+      const seg = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+      
+      setTimeLeft({ hrs, min, seg });
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
 
   return (
@@ -403,9 +358,9 @@ export const FlashDeals = () => {
              <span className="text-[10px] font-black text-brand-400 uppercase tracking-[0.3em]">Encerra em</span>
              <div className="flex gap-4">
                 {[
-                  { label: "HRS", val: "08" },
-                  { label: "MIN", val: "24" },
-                  { label: "SEG", val: "12" },
+                  { label: "HRS", val: timeLeft.hrs },
+                  { label: "MIN", val: timeLeft.min },
+                  { label: "SEG", val: timeLeft.seg },
                 ].map((timer, i) => (
                   <div key={i} className="flex flex-col items-center">
                     <span className="text-3xl md:text-4xl font-bold text-white tabular-nums">{timer.val}</span>

@@ -2,22 +2,36 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { X, Minus, Plus, Truck, ShieldCheck, ArrowRight } from "lucide-react";
-import { mockProducts } from "@/lib/mockData";
+import { X, Minus, Plus, Truck, ShieldCheck, ArrowRight, ShoppingCart } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
 export default function Carrinho() {
-  // Mock items utilizando a base de dados determinística
-  const cartItems = mockProducts.slice(0, 3).map((p) => ({
-    product: p,
-    quantity: 1,
-  }));
+  const { cart, updateQuantity, removeFromCart, subtotal } = useCart();
 
-  const subtotal = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  const freight = 19.90;
+  const freight = cart.length > 0 ? (subtotal > 250 ? 0 : 19.90) : 0;
   const discount = subtotal * 0.05;
   const total = subtotal + freight;
+
+  if (cart.length === 0) {
+    return (
+      <div className="bg-warm-50 min-h-screen py-24 px-4 flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+            <ShoppingCart className="w-10 h-10 text-brand-200" />
+          </div>
+          <h1 className="text-3xl font-black text-brand-950">Seu carrinho está vazio</h1>
+          <p className="text-warm-500 max-w-xs mx-auto">Parece que você ainda não adicionou nenhum produto. Que tal explorar nossa loja?</p>
+          <Link href="/loja">
+            <Button size="lg" className="px-10 rounded-2xl font-black tracking-widest">
+              VOLTAR PARA A LOJA
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-warm-50 min-h-screen py-12 md:py-20 px-4">
@@ -33,7 +47,7 @@ export default function Carrinho() {
             </nav>
             <h1 className="text-3xl md:text-5xl font-extrabold text-brand-900 tracking-tight leading-none">
               Seu Carrinho
-              <span className="text-brand-300 ml-4 font-normal text-2xl md:text-3xl">({cartItems.length})</span>
+              <span className="text-brand-300 ml-4 font-normal text-2xl md:text-3xl">({cart.length})</span>
             </h1>
           </div>
           <Link href="/loja" className="text-brand-700 font-bold text-sm hover:underline underline-offset-8 transition-all hidden md:block">
@@ -45,7 +59,7 @@ export default function Carrinho() {
           
           {/* Listagem de Produtos */}
           <div className="space-y-4">
-            {cartItems.map((item) => (
+            {cart.map((item) => (
               <Card key={item.product.id} className="p-0 overflow-hidden border-brand-100/50">
                 <div className="flex flex-col sm:flex-row items-center p-5 gap-6">
                   {/* Imagem com gradiente de fundo */}
@@ -76,18 +90,27 @@ export default function Carrinho() {
                     <div className="flex flex-wrap items-center justify-center sm:justify-between gap-4 mt-auto">
                       {/* Seletor de Qtd Premium */}
                       <div className="flex items-center bg-warm-100 rounded-full p-1 border border-warm-200/50">
-                        <button className="w-8 h-8 flex items-center justify-center text-brand-700 hover:bg-white rounded-full transition-all shadow-sm active:scale-95">
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="w-8 h-8 flex items-center justify-center text-brand-700 hover:bg-white rounded-full transition-all shadow-sm active:scale-95"
+                        >
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="w-10 text-center font-bold text-brand-900 text-sm">
                           {item.quantity}
                         </span>
-                        <button className="w-8 h-8 flex items-center justify-center text-brand-700 hover:bg-white rounded-full transition-all shadow-sm active:scale-95">
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="w-8 h-8 flex items-center justify-center text-brand-700 hover:bg-white rounded-full transition-all shadow-sm active:scale-95"
+                        >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
 
-                      <button className="flex items-center gap-2 text-xs font-bold text-error/70 hover:text-error transition-colors uppercase tracking-widest p-2">
+                      <button 
+                        onClick={() => removeFromCart(item.id)}
+                        className="flex items-center gap-2 text-xs font-bold text-error/70 hover:text-error transition-colors uppercase tracking-widest p-2"
+                      >
                         <X className="w-4 h-4" /> Remover
                       </button>
                     </div>

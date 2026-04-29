@@ -51,7 +51,7 @@ export const ProductGallery = ({ images }: ProductGalleryProps) => {
         <div 
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex md:block h-full overflow-x-auto md:overflow-hidden snap-x snap-mandatory scrollbar-hide"
+          className="flex md:flex h-full overflow-x-auto md:overflow-hidden snap-x snap-mandatory scrollbar-hide"
         >
           {images.map((img, index) => (
             <div key={index} className="shrink-0 w-full h-full snap-center flex items-center justify-center p-8 md:p-12 relative cursor-zoom-in">

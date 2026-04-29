@@ -1,13 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Check, ShoppingCart, Minus, Plus, Lock, RefreshCw, QrCode, Truck } from "lucide-react";
+import { Check, ShoppingCart, Minus, Plus, Lock, RefreshCw, QrCode, Truck, ExternalLink } from "lucide-react";
 import { Product } from "@/types";
 import { RatingStars } from "../common/RatingStars";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Badge } from "../ui/Badge";
 import { TrustBadges } from "../common/TrustBadges";
+import { useCart } from "@/context/CartContext";
+import { useRouter } from "next/navigation";
 
 interface ProductInfoProps {
   product: Product;
@@ -18,6 +20,20 @@ export const ProductInfo = ({ product }: ProductInfoProps) => {
   const [shippingCep, setShippingCep] = React.useState("");
   const [isCalculating, setIsCalculating] = React.useState(false);
   const [shippingResult, setShippingResult] = React.useState<null | { price: number; days: string }>(null);
+  const [added, setAdded] = React.useState(false);
+  const { addToCart } = useCart();
+  const router = useRouter();
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleBuyNow = () => {
+    addToCart(product, quantity);
+    router.push('/carrinho');
+  };
 
   const calculateShipping = () => {
     if (shippingCep.length < 8) return;
@@ -152,12 +168,43 @@ export const ProductInfo = ({ product }: ProductInfoProps) => {
         </div>
 
         <div className="flex flex-col gap-3">
-          <Button size="lg" className="h-16 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-accent-500/20 gap-3 group bg-accent-500 hover:bg-accent-600 rounded-2xl border-none">
+          <Button 
+            onClick={handleBuyNow}
+            size="lg" className="h-16 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-accent-500/20 gap-3 group bg-accent-500 hover:bg-accent-600 rounded-2xl border-none"
+          >
              Comprar Agora
           </Button>
-          <Button variant="outline" size="lg" className="h-16 text-sm font-black uppercase tracking-[0.2em] border-warm-200 bg-white hover:bg-warm-50 text-warm-700 rounded-2xl">
-             Adicionar ao Carrinho
+          <Button 
+            onClick={handleAddToCart}
+            variant="outline" size="lg" className="h-16 text-sm font-black uppercase tracking-[0.2em] border-warm-200 bg-white hover:bg-warm-50 text-warm-700 rounded-2xl"
+          >
+             {added ? "Adicionado!" : "Adicionar ao Carrinho"}
           </Button>
+
+          {(product.link_shopee || product.link_mercadolivre) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+              {product.link_shopee && (
+                <a 
+                  href={product.link_shopee} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 h-14 bg-[#EE4D2D] hover:bg-[#ff5d3d] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-orange-200"
+                >
+                  <ShoppingCart className="w-4 h-4" /> Comprar na Shopee
+                </a>
+              )}
+              {product.link_mercadolivre && (
+                <a 
+                  href={product.link_mercadolivre} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 h-14 bg-[#FFF159] hover:bg-[#fff585] text-[#333333] rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-yellow-100"
+                >
+                  <ExternalLink className="w-4 h-4" /> Mercado Livre
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

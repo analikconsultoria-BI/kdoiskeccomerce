@@ -5,18 +5,27 @@ import Link from "next/link";
 import { ShieldCheck, Truck, CreditCard, QrCode, ClipboardCheck, ArrowLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { mockProducts } from "@/lib/mockData";
+import { useCart } from "@/context/CartContext";
+import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
+  const { cart, subtotal } = useCart();
+  const router = useRouter();
   const [paymentMethod, setPaymentMethod] = React.useState<"pix" | "card">("pix");
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Itens do pedido (devem vir do seu carrinho real no futuro)
-  const orderItems = mockProducts.slice(0, 3).map((p) => ({
-    id: p.id,
-    name: p.name,
-    quantity: 1
+  React.useEffect(() => {
+    if (cart.length === 0) {
+      router.push('/carrinho');
+    }
+  }, [cart, router]);
+
+  // Itens do pedido do carrinho real
+  const orderItems = cart.map((item) => ({
+    id: item.id,
+    name: item.product.name,
+    quantity: item.quantity
   }));
 
   const handleCheckout = async (e: React.MouseEvent) => {
@@ -52,9 +61,8 @@ export default function CheckoutPage() {
     }
   };
 
-  // Cálculo de valores
-  const subtotal = 455.90;
-  const freight = 0.00;
+  // Cálculo de valores dinâmicos
+  const freight = subtotal > 250 ? 0 : 19.90;
   const discount = paymentMethod === "pix" ? subtotal * 0.05 : 0;
   const total = subtotal + freight - discount;
 

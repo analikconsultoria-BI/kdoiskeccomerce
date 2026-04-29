@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Search } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface SearchBarProps extends React.FormHTMLAttributes<HTMLFormElement> {
   placeholder?: string;
@@ -10,12 +11,24 @@ interface SearchBarProps extends React.FormHTMLAttributes<HTMLFormElement> {
 }
 
 export const SearchBar = ({ className = "", placeholder = "Buscar produtos...", large = false, variant = "default", ...props }: SearchBarProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = React.useState(searchParams.get("busca") || "");
   const isGlass = variant === "glass";
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      router.push(`/loja?busca=${encodeURIComponent(query.trim())}`);
+    } else {
+      router.push("/loja");
+    }
+  };
 
   return (
     <form
       className={`flex w-full group ${className}`}
-      onSubmit={(e) => e.preventDefault()}
+      onSubmit={handleSubmit}
       {...props}
     >
       <div className="flex-1 relative flex items-center">
@@ -26,6 +39,8 @@ export const SearchBar = ({ className = "", placeholder = "Buscar produtos...", 
         </div>
         <input 
           placeholder={placeholder}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           className={`
             w-full outline-none transition-all duration-300
             ${large ? "py-4 text-lg rounded-l-xl pl-12 pr-4" : "py-2.5 rounded-l-[10px] pl-11 pr-4 text-sm"}

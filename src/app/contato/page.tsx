@@ -1,14 +1,26 @@
 "use client";
 
-import * as React from "react";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { MapPin, Mail, Phone, MessageCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Accordion, AccordionItem } from "@/components/ui/Accordion";
-import { mockFaqs } from "@/lib/mockData";
 
 export default function Contato() {
+  const [configs, setConfigs] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch('/api/config', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => setConfigs(data))
+      .catch(err => console.error(err));
+  }, []);
+
+  const whatsappLink = configs.whatsapp_suporte 
+    ? `https://wa.me/${configs.whatsapp_suporte.replace(/\D/g, '')}` 
+    : '#';
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
@@ -74,14 +86,16 @@ export default function Contato() {
 
           {/* Informações (Direita) */}
           <div className="flex flex-col gap-6">
-            <Card hoverable className="p-6 md:p-8 bg-green-500 text-white border-none relative overflow-hidden group">
+            <Card hoverable className="p-6 md:p-8 bg-green-600 text-white border-none relative overflow-hidden group rounded-4xl">
               <div className="relative z-10">
                 <MessageCircle className="w-12 h-12 mb-4" />
                 <h4 className="text-2xl font-bold mb-2">Atendimento rápido</h4>
-                <p className="mb-6 opacity-90 text-sm md:text-base">A forma mais rápida de falar conosco é pelo WhatsApp. Respondemos em poucos minutos.</p>
-                <Button className="bg-white text-green-600 hover:bg-gray-100" size="md">
-                  Chamar no WhatsApp
-                </Button>
+                <p className="mb-6 opacity-90 text-sm md:text-base font-medium">A forma mais rápida de falar conosco é pelo WhatsApp. Respondemos em poucos minutos.</p>
+                <Link href={whatsappLink} target="_blank">
+                  <Button className="bg-white text-green-600 hover:bg-gray-100 font-bold" size="md">
+                    Chamar no WhatsApp
+                  </Button>
+                </Link>
               </div>
               <div className="absolute -bottom-10 -right-10 opacity-10 group-hover:scale-110 transition-transform duration-500">
                 <MessageCircle className="w-48 h-48" />
@@ -95,7 +109,7 @@ export default function Contato() {
                  </div>
                  <div>
                    <h5 className="font-bold text-gray-900 mb-1">Telefone</h5>
-                   <p className="text-brand-700 font-medium">(11) 4002-8922</p>
+                   <p className="text-brand-700 font-medium">{configs.whatsapp_suporte || '(11) 99999-9999'}</p>
                    <p className="text-sm text-gray-500 mt-1">Seg a Sex, 08h às 18h</p>
                  </div>
                </Card>
@@ -106,7 +120,7 @@ export default function Contato() {
                  </div>
                  <div>
                    <h5 className="font-bold text-gray-900 mb-1">E-mail</h5>
-                   <p className="text-brand-700 font-medium">contato@kdoisk.com.br</p>
+                   <p className="text-brand-700 font-medium">{configs.email_contato || 'contato@kdoisk.com.br'}</p>
                    <p className="text-sm text-gray-500 mt-1">Resposta em até 24h</p>
                  </div>
                </Card>
@@ -117,33 +131,14 @@ export default function Contato() {
                   <MapPin className="w-6 h-6 text-brand-700" />
                </div>
                <div>
-                 <h5 className="font-bold text-gray-900 mb-2">Endereço Comercial</h5>
-                 <p className="text-gray-700 mb-3">
-                   Av. Paulista, 1000 - Bela Vista<br />
-                   São Paulo - SP, 01310-100
+                 <h5 className="font-bold text-gray-900 mb-2">Atendimento</h5>
+                 <p className="text-gray-700 mb-1">
+                   Disponível em todo o território nacional.
                  </p>
-                 <a href="#" className="font-medium text-brand-700 hover:underline">Ver no mapa &rarr;</a>
+                 <p className="text-xs text-gray-500">Dúvidas técnicas ou suporte pós-venda.</p>
                </div>
             </Card>
           </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="bg-white py-16 px-4 border-t border-gray-100">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-brand-900 mb-4">Perguntas Frequentes</h2>
-            <p className="text-lg text-gray-600">Tudo o que você precisa saber.</p>
-          </div>
-
-          <Accordion>
-            {mockFaqs.map((faq, idx) => (
-              <AccordionItem key={idx} title={faq.question} defaultOpen={idx === 0}>
-                {faq.answer}
-              </AccordionItem>
-            ))}
-          </Accordion>
         </div>
       </section>
     </div>

@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { SlidersHorizontal, ChevronDown, X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { FiltersSidebar } from "@/components/shop/FiltersSidebar";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { Pagination } from "@/components/shop/Pagination";
-import { mockProducts } from "@/lib/mockData";
 
 export default function Loja() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
@@ -15,13 +15,23 @@ export default function Loja() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+  
+  const searchParams = useSearchParams();
+  const busca = searchParams.get('busca') || '';
+  const initialCategory = searchParams.get('categoria');
+
+  React.useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   React.useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
         const [productsRes, categoriesRes] = await Promise.all([
-          fetch('/api/produtos', { cache: 'no-store' }),
+          fetch(`/api/produtos?busca=${encodeURIComponent(busca)}`, { cache: 'no-store' }),
           fetch('/api/categorias', { cache: 'no-store' })
         ]);
 
@@ -40,7 +50,7 @@ export default function Loja() {
     }
 
     fetchData();
-  }, []);
+  }, [busca]);
 
   const filteredProducts = selectedCategory 
     ? products.filter(p => String(p.category?.id) === String(selectedCategory))
@@ -72,11 +82,28 @@ export default function Loja() {
         />
 
         {/* Header da Página */}
-        <div className="py-8 bg-white rounded-xl px-6 mb-8 shadow-sm">
-          <h1 className="text-3xl md:text-4xl font-bold text-brand-900 mb-2">Nossa Loja</h1>
-          <p className="text-gray-600">
-            {loading ? 'Carregando produtos...' : `Exibindo ${filteredProducts.length} produtos`}
-          </p>
+        <div className="relative overflow-hidden rounded-3xl mb-8 group min-h-[160px] flex items-center">
+          {selectedCategory && categories.find(c => String(c.id) === selectedCategory)?.imagem ? (
+            <div className="absolute inset-0 z-0">
+              <img 
+                src={categories.find(c => String(c.id) === selectedCategory)?.imagem} 
+                alt="Banner" 
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-linear-to-r from-brand-950 via-brand-950/60 to-transparent" />
+            </div>
+          ) : (
+            <div className="absolute inset-0 z-0 bg-linear-to-br from-brand-900 to-brand-950" />
+          )}
+          
+          <div className="relative z-10 px-8 py-10">
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-2 tracking-tight uppercase">
+              {selectedCategory ? categories.find(c => String(c.id) === selectedCategory)?.nome : 'Nossa Loja'}
+            </h1>
+            <p className="text-brand-100 font-medium">
+              {loading ? 'Carregando produtos...' : `Exibindo ${filteredProducts.length} produtos premium.`}
+            </p>
+          </div>
         </div>
 
         {/* Main Layout 2 columns */}

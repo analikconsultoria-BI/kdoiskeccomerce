@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
+        redirect_uri: process.env.BLING_REDIRECT_URI || '',
       }),
     });
 
@@ -32,14 +34,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(data, { status: response.status });
     }
 
-    // In a production environment with Vercel, you should save these to a database (KV, Postgres, etc.)
-    // For now, we return them so the user can manually update their .env.local as requested
-    return NextResponse.json({
-      message: 'Tokens obtidos com sucesso! Copie-os para o seu .env.local',
-      BLING_ACCESS_TOKEN: data.access_token,
-      BLING_REFRESH_TOKEN: data.refresh_token,
-      expires_in: data.expires_in,
-    });
+    // Salvar no Supabase (usando update no ID 1 para garantir a atualização do registro existente)
+    const { error: dbError } = await supabaseAdmin
+      .from('bling_tokens')
+      .update({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_in ? new Date(Date.now() + data.expires_in * 1000).toISOString() : null
+      })
+      .eq('id', 1);
+
+    if (dbError) {
+      console.error('Erro ao salvar tokens no banco:', dbError);
+      return NextResponse.json({ error: 'Erro ao salvar tokens no banco' }, { status: 500 });
+    }
+
+    // Redirecionar de volta para o painel de conexão
+    return NextResponse.redirect(new URL('/admin/bling-connect?success=true', request.url));
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
