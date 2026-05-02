@@ -2,20 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { MapPin, Mail, Phone, ShieldCheck, ShoppingCart } from "lucide-react";
+import { 
+  MapPin, Mail, Phone, ShieldCheck, ShoppingCart, 
+  Truck, RotateCcw, Headphones, CreditCard, Lock 
+} from "lucide-react";
 
 const InstagramIcon = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
     <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
@@ -23,17 +16,7 @@ const InstagramIcon = ({ className }: { className?: string }) => (
 );
 
 const FacebookIcon = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
   </svg>
 );
@@ -47,116 +30,149 @@ export const Footer = () => {
       fetch('/api/categorias', { cache: 'no-store' }).then(res => res.json()),
       fetch('/api/config', { cache: 'no-store' }).then(res => res.json())
     ]).then(([catData, configData]) => {
-      if (Array.isArray(catData)) {
-        setCategories(catData);
-      }
-      if (configData && !configData.error) {
-        setConfigs(configData);
-      }
-    }).catch(err => console.error(err));
+      if (Array.isArray(catData)) setCategories(catData);
+      if (configData && !configData.error) setConfigs(configData);
+    }).catch(console.error);
   }, []);
 
   return (
-    <footer className="bg-brand-50/50 pt-24 pb-12 px-4 border-t border-brand-100">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-20">
-          {/* Col 1 — Marca */}
-          <div className="space-y-6">
+    <footer className="bg-gray-50 border-t border-gray-200">
+      {/* ── Trust Bar ── */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <TrustItem icon={Truck} title="Entrega Rápida" subtitle="Para todo o Brasil" />
+            <TrustItem icon={RotateCcw} title="Troca Garantida" subtitle="30 dias de garantia" />
+            <TrustItem icon={Lock} title="Compra Segura" subtitle="SSL e dados protegidos" />
+            <TrustItem icon={Headphones} title="Suporte Humano" subtitle="Atendimento em horário comercial" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main Footer Content ── */}
+      <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-6">
+
+          {/* Col 1 — Brand (wider) */}
+          <div className="md:col-span-4 space-y-5">
             <Link href="/" className="inline-flex flex-col group">
-              <span className="text-2xl font-black text-brand-900 tracking-tight">KdoisK</span>
-              <span className="text-[10px] font-bold text-accent-600 tracking-[0.2em] uppercase mt-1">Health & Technology</span>
+              <span className="text-2xl font-bold text-gray-900 tracking-tight">KdoisK</span>
+              <span className="text-[10px] font-bold text-brand-600 tracking-wider uppercase mt-0.5">Health & Technology</span>
             </Link>
-            <p className="text-warm-500 text-sm leading-relaxed max-w-xs">
+            <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
               Especialistas em soluções que facilitam sua rotina. Do cuidado auditivo à segurança residencial, tecnologia que resolve com confiança.
             </p>
-            <div className="flex flex-wrap gap-4 text-brand-400 text-sm font-semibold">
+            <div className="flex items-center gap-4">
               {configs.instagram_url && (
-                <a href={configs.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-brand-700 transition-colors flex items-center gap-1">
-                  <InstagramIcon className="w-4 h-4" /> Instagram
+                <a href={configs.instagram_url} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-brand-600 hover:text-white transition-all">
+                  <InstagramIcon className="w-4 h-4" />
                 </a>
               )}
               {configs.facebook_url && (
-                <a href={configs.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-brand-700 transition-colors flex items-center gap-1">
-                  <FacebookIcon className="w-4 h-4" /> Facebook
+                <a href={configs.facebook_url} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-brand-600 hover:text-white transition-all">
+                  <FacebookIcon className="w-4 h-4" />
                 </a>
               )}
               {configs.shopee_url && (
-                <a href={configs.shopee_url} target="_blank" rel="noopener noreferrer" className="hover:text-[#EE4D2D] transition-colors flex items-center gap-1">
-                  <ShoppingCart className="w-4 h-4" /> Shopee
-                </a>
-              )}
-              {configs.mercadolivre_url && (
-                <a href={configs.mercadolivre_url} target="_blank" rel="noopener noreferrer" className="hover:text-[#F3E100] transition-colors flex items-center gap-1 text-slate-600">
-                  <ShoppingCart className="w-4 h-4" /> Mercado Livre
+                <a href={configs.shopee_url} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-[#EE4D2D] hover:text-white transition-all">
+                  <ShoppingCart className="w-4 h-4" />
                 </a>
               )}
             </div>
           </div>
 
-          {/* Col 2 — Linhas de Produto */}
-          <div>
-            <h4 className="font-bold text-sm uppercase tracking-wider text-brand-900 mb-6">Categorias</h4>
-            <ul className="space-y-4 text-warm-600 text-sm font-medium">
+          {/* Col 2 — Categorias */}
+          <div className="md:col-span-2">
+            <h4 className="font-bold text-sm text-gray-900 mb-4">Categorias</h4>
+            <ul className="space-y-2.5 text-gray-500 text-sm">
               {categories.length > 0 ? (
                 categories.map((cat) => (
                   <li key={cat.id}>
-                    <Link href={cat.link} className="hover:text-brand-700 transition-colors">
-                      {cat.nome}
-                    </Link>
+                    <Link href={cat.link} className="hover:text-brand-600 transition-colors">{cat.nome}</Link>
                   </li>
                 ))
               ) : (
-                <li><Link href="/loja" className="hover:text-brand-700 transition-colors">Ver Loja</Link></li>
+                <li><Link href="/loja" className="hover:text-brand-600 transition-colors">Ver Loja</Link></li>
               )}
             </ul>
           </div>
 
-          {/* Col 3 — Suporte */}
-          <div>
-            <h4 className="font-bold text-sm uppercase tracking-wider text-brand-900 mb-6">Suporte</h4>
-            <ul className="space-y-4 text-warm-600 text-sm font-medium">
-              <li><Link href="/sobre" className="hover:text-brand-700 transition-colors">Sobre a KdoisK</Link></li>
-              <li><a href="#" className="hover:text-brand-700 transition-colors">Privacidade</a></li>
-              <li><a href="#" className="hover:text-brand-700 transition-colors">Trocas e Garantia</a></li>
-              <li><a href="#" className="hover:text-brand-700 transition-colors">Fale com Especialista</a></li>
+          {/* Col 3 — Institucional */}
+          <div className="md:col-span-2">
+            <h4 className="font-bold text-sm text-gray-900 mb-4">Institucional</h4>
+            <ul className="space-y-2.5 text-gray-500 text-sm">
+              <li><Link href="/sobre" className="hover:text-brand-600 transition-colors">Sobre a KdoisK</Link></li>
+              <li><Link href="/privacidade" className="hover:text-brand-600 transition-colors">Política de Privacidade</Link></li>
+              <li><Link href="/termos" className="hover:text-brand-600 transition-colors">Termos de Uso</Link></li>
+              <li><a href="#" className="hover:text-brand-600 transition-colors">Trocas e Devoluções</a></li>
+              <li><a href="#" className="hover:text-brand-600 transition-colors">Trabalhe Conosco</a></li>
             </ul>
           </div>
 
-          {/* Col 4 — Contato */}
-          <div>
-            <h4 className="font-bold text-sm uppercase tracking-wider text-brand-900 mb-6">Contato</h4>
-            <ul className="space-y-5">
-              <li className="flex items-center gap-3 text-accent-600 font-extrabold text-lg">
-                <Phone className="w-5 h-5" /> {configs.whatsapp_suporte || '(11) 99999-9999'}
+          {/* Col 4 — Atendimento */}
+          <div className="md:col-span-2">
+            <h4 className="font-bold text-sm text-gray-900 mb-4">Atendimento</h4>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-2.5 text-brand-600 font-bold text-sm">
+                <Phone className="w-4 h-4" />
+                {configs.whatsapp_suporte || '(11) 99999-9999'}
               </li>
-              <li className="flex items-center gap-3 text-warm-500 text-sm font-medium">
-                <Mail className="w-4 h-4 text-brand-400" /> {configs.email_contato || 'contato@kdoisk.com.br'}
+              <li className="flex items-center gap-2.5 text-gray-500 text-sm">
+                <Mail className="w-4 h-4 text-gray-400" />
+                {configs.email_contato || 'contato@kdoisk.com.br'}
               </li>
-              <li className="flex items-center gap-3 text-warm-500 text-sm font-medium">
-                <MapPin className="w-4 h-4 text-brand-400" /> Atendimento Nacional
+              <li className="flex items-center gap-2.5 text-gray-500 text-sm">
+                <MapPin className="w-4 h-4 text-gray-400" />
+                Atendimento Nacional
               </li>
             </ul>
           </div>
+
+          {/* Col 5 — Pagamento */}
+          <div className="md:col-span-2">
+            <h4 className="font-bold text-sm text-gray-900 mb-4">Formas de Pagamento</h4>
+            <div className="flex flex-wrap gap-2">
+              {["VISA", "MASTERCARD", "PIX", "BOLETO", "ELO"].map(pay => (
+                <span key={pay} className="text-[10px] font-bold tracking-wide border border-gray-200 px-2.5 py-1.5 rounded-md text-gray-500 bg-white">{pay}</span>
+              ))}
+            </div>
+            <div className="mt-5 flex items-center gap-2 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+              <ShieldCheck className="w-4 h-4 text-green-600" />
+              <span className="text-[11px] font-bold text-green-700">Compra 100% Protegida</span>
+            </div>
+          </div>
+
         </div>
+      </div>
 
-        {/* Info & Trust */}
-        <div className="pt-10 border-t border-brand-100 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex flex-wrap justify-center gap-4 opacity-70 grayscale">
-            {["VISA", "MASTERCARD", "PIX", "BOLETO"].map(pay => (
-              <span key={pay} className="text-[10px] font-black tracking-widest border border-brand-200 px-2.5 py-1 rounded-lg text-brand-400">{pay}</span>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-brand-100 shadow-sm">
-            <ShieldCheck className="w-5 h-5 text-accent-600" />
-            <span className="text-[10px] font-black text-brand-900 uppercase tracking-[0.2em]">Compra 100% Protegida</span>
-          </div>
-
-          <div className="text-center md:text-right">
-            <p className="text-warm-400 text-[10px] uppercase font-bold tracking-widest">&copy; {new Date().getFullYear()} KdoisK. Resolvemos para você.</p>
+      {/* ── Bottom Bar ── */}
+      <div className="border-t border-gray-200 bg-gray-100/50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-3">
+          <p className="text-gray-400 text-xs">
+            &copy; {new Date().getFullYear()} KdoisK — CNPJ: XX.XXX.XXX/0001-XX. Todos os direitos reservados.
+          </p>
+          <div className="flex items-center gap-4 text-xs text-gray-400">
+            <Link href="/termos" className="hover:text-brand-600 transition-colors">Termos</Link>
+            <Link href="/privacidade" className="hover:text-brand-600 transition-colors">Privacidade</Link>
+            <Link href="/contato" className="hover:text-brand-600 transition-colors">Contato</Link>
           </div>
         </div>
       </div>
     </footer>
   );
 };
+
+/* ── Trust Item Component ── */
+function TrustItem({ icon: Icon, title, subtitle }: { icon: any; title: string; subtitle: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+        <Icon className="w-5 h-5 text-brand-600" />
+      </div>
+      <div>
+        <p className="text-sm font-bold text-gray-900">{title}</p>
+        <p className="text-xs text-gray-500">{subtitle}</p>
+      </div>
+    </div>
+  );
+}

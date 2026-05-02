@@ -51,7 +51,7 @@ export async function GET(
       },
       rating: 0,
       reviewsCount: 0,
-      soldCount: 0,
+      soldCount: p.vendas_realizadas || 0,
       shortDescription: p.descricao_curta || p.descricao_bling || '',
       benefits: p.beneficios || [],
       description: p.descricao_completa || p.descricao_bling || '',

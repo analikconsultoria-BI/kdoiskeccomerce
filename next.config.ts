@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    qualities: [75, 100],
+    formats: ['image/webp'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'orgbling.s3.amazonaws.com' },
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'koqvxxafxllhsfvfxeph.supabase.co' },
+    ],
+  },
   async headers() {
     return [
       {

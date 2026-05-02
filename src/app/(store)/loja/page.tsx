@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { SlidersHorizontal, ChevronDown, X } from "lucide-react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { FiltersSidebar } from "@/components/shop/FiltersSidebar";
@@ -18,6 +19,8 @@ function LojaInner() {
   const [error, setError] = React.useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
   
+  const [sortBy, setSortBy] = React.useState('mais-vendidos');
+  
   const searchParams = useSearchParams();
   const busca = searchParams.get('busca') || '';
   const initialCategory = searchParams.get('categoria');
@@ -33,7 +36,7 @@ function LojaInner() {
       try {
         setLoading(true);
         const [productsRes, categoriesRes] = await Promise.all([
-          fetch(`/api/produtos?busca=${encodeURIComponent(busca)}`, { cache: 'no-store' }),
+          fetch(`/api/produtos?busca=${encodeURIComponent(busca)}${initialCategory ? `&categoria=${encodeURIComponent(initialCategory)}` : ''}`, { cache: 'no-store' }),
           fetch('/api/categorias', { cache: 'no-store' })
         ]);
 
@@ -54,9 +57,22 @@ function LojaInner() {
     fetchData();
   }, [busca]);
 
-  const filteredProducts = selectedCategory 
-    ? products.filter(p => String(p.category?.id) === String(selectedCategory))
-    : products;
+  const filteredProducts = React.useMemo(() => {
+    let result = selectedCategory 
+      ? products.filter(p => String(p.category?.id) === String(selectedCategory))
+      : [...products];
+
+    // Aplicar ordenação
+    if (sortBy === 'mais-vendidos') {
+      result.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+    } else if (sortBy === 'preco-crescente') {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'preco-decrescente') {
+      result.sort((a, b) => b.price - a.price);
+    }
+
+    return result;
+  }, [products, selectedCategory, sortBy]);
 
   if (error) {
     return (
@@ -87,11 +103,30 @@ function LojaInner() {
         <div className="relative overflow-hidden rounded-3xl mb-8 group min-h-[160px] flex items-center">
           {selectedCategory && categories.find(c => String(c.id) === selectedCategory)?.imagem ? (
             <div className="absolute inset-0 z-0">
-              <img 
-                src={categories.find(c => String(c.id) === selectedCategory)?.imagem} 
-                alt="Banner" 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-              />
+              {/* Desktop */}
+              <div className="hidden md:block relative w-full h-full">
+                <Image 
+                  src={categories.find(c => String(c.id) === selectedCategory)?.imagem_desktop_url || categories.find(c => String(c.id) === selectedCategory)?.imagem || 'https://placehold.co/400x400/f9f9f9/cccccc?text=Sem+Imagem'} 
+                  alt="Banner" 
+                  fill
+                  priority
+                  quality={75}
+                  unoptimized={!categories.find(c => String(c.id) === selectedCategory)?.imagem}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+              </div>
+              {/* Mobile */}
+              <div className="block md:hidden relative w-full h-full">
+                <Image 
+                  src={categories.find(c => String(c.id) === selectedCategory)?.imagem_mobile_url || categories.find(c => String(c.id) === selectedCategory)?.imagem_desktop_url || categories.find(c => String(c.id) === selectedCategory)?.imagem || 'https://placehold.co/400x400/f9f9f9/cccccc?text=Sem+Imagem'} 
+                  alt="Banner" 
+                  fill
+                  priority
+                  quality={75}
+                  unoptimized={!categories.find(c => String(c.id) === selectedCategory)?.imagem}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+              </div>
               <div className="absolute inset-0 bg-linear-to-r from-brand-950 via-brand-950/60 to-transparent" />
             </div>
           ) : (
@@ -145,10 +180,14 @@ function LojaInner() {
               <div className="flex items-center gap-3 self-end sm:self-auto">
                 <span className="text-sm text-gray-600 font-medium">Ordenar por:</span>
                 <div className="relative">
-                  <select className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-brand-300 focus:border-brand-500 font-medium text-gray-700 cursor-pointer">
-                    <option>Relevância</option>
-                    <option>Menor preço</option>
-                    <option>Maior preço</option>
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-brand-300 focus:border-brand-500 font-medium text-gray-700 cursor-pointer"
+                  >
+                    <option value="mais-vendidos">Mais vendidos</option>
+                    <option value="preco-crescente">Menor preço</option>
+                    <option value="preco-decrescente">Maior preço</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
                 </div>

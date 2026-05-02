@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
       .from('produtos_config')
       .select('*')
       .eq('ativo', true)
-      .order('ordem_exibicao', { ascending: true })
-      .order('created_at', { ascending: false });
+      .order('vendas_realizadas', { ascending: false })
+      .order('ordem_exibicao', { ascending: true });
 
     if (busca) {
       // Sanitizar input para evitar injeção no filtro PostgREST

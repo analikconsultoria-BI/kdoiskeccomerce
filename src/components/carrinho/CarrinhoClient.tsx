@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { X, Minus, Plus, Truck, ShieldCheck, ArrowRight, ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/Button";
@@ -69,12 +70,15 @@ export default function CarrinhoClient() {
             {cart.map((item) => (
               <Card key={item.id || item.product?.id} className="p-0 overflow-hidden border-brand-100/50">
                 <div className="flex flex-col sm:flex-row items-center p-5 gap-6">
-                  {/* Imagem com gradiente de fundo */}
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-linear-to-br from-brand-100 to-brand-50 flex items-center justify-center shrink-0 border border-brand-100/20">
-                    <img 
-                      src={item.product?.images?.[0] || "https://placehold.co/600x400/f3f4f6/666666?text=Imagem+Indisponivel"} 
+                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-linear-to-br from-brand-100 to-brand-50 flex items-center justify-center shrink-0 border border-brand-100/20 overflow-hidden">
+                    <Image 
+                      src={item.product?.images?.[0] || 'https://placehold.co/400x400/f9f9f9/cccccc?text=Sem+Imagem'} 
                       alt={item.product?.name || "Produto"}
-                      className="w-16 h-16 object-contain mix-blend-multiply opacity-80" 
+                      fill
+                      sizes="120px"
+                      quality={75}
+                      unoptimized={!item.product?.images?.[0] || item.product?.images?.[0].includes('placehold.co')}
+                      className="object-contain p-2 mix-blend-multiply opacity-80" 
                     />
                   </div>
 

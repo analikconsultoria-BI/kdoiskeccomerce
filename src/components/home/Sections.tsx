@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Battery, Ear, Archive, Truck, ShieldCheck, RefreshCw, Headphones, Check, ChevronLeft, ChevronRight, Stethoscope, HeartPulse, Quote } from "lucide-react";
 import { SearchBar } from "../common/SearchBar";
 import { ProductCard } from "../product/ProductCard";
@@ -13,23 +14,25 @@ import { RatingStars } from "../common/RatingStars";
    1.2 — HERO CLEAN
    ═════════════════════════════════════════════════ */
 
-export const Hero = () => {
-  const [slides, setSlides] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
+export const Hero = ({ banners }: { banners?: any[] }) => {
+  const [slides, setSlides] = React.useState<any[]>(banners || []);
+  const [loading, setLoading] = React.useState(!banners);
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
 
   React.useEffect(() => {
-    fetch('/api/banners?local=home', { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setSlides(data);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    if (!banners) {
+      fetch('/api/banners?local=home', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setSlides(data);
+          }
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
+  }, [banners]);
 
   React.useEffect(() => {
     if (isPaused || slides.length <= 1) return;
@@ -55,11 +58,36 @@ export const Hero = () => {
             ${index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}
           `}
         >
-          <div 
-            className="w-full h-full bg-cover bg-center bg-no-repeat cursor-pointer"
-            style={{ backgroundImage: `url(${slide.imagem_url})` }}
+          <div
+            className="relative w-full h-full cursor-pointer"
             onClick={() => slide.link_url && (window.location.href = slide.link_url)}
-          />
+          >
+            {/* Desktop Banner */}
+            <div className="hidden md:block relative w-full h-full">
+              <Image
+                src={slide.imagem_desktop_url || slide.imagem_url}
+                alt={slide.titulo || "Banner"}
+                fill
+                priority={index === 0}
+                quality={75}
+                sizes="(max-width: 768px) 0px, 100vw"
+                className="object-cover"
+              />
+            </div>
+
+            {/* Mobile Banner */}
+            <div className="block md:hidden relative w-full h-full">
+              <Image
+                src={slide.imagem_mobile_url || slide.imagem_desktop_url || slide.imagem_url}
+                alt={slide.titulo || "Banner"}
+                fill
+                priority={index === 0}
+                quality={75}
+                sizes="(max-width: 768px) 100vw, 0px"
+                className="object-cover"
+              />
+            </div>
+          </div>
         </div>
       ))}
 
@@ -96,21 +124,23 @@ export const Hero = () => {
    CATEGORIAS GRID — Fundo Branco Puro
    ═════════════════════════════════════════════════ */
 
-export const CategoriesGrid = () => {
-  const [categories, setCategories] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
+export const CategoriesGrid = ({ initialCategories }: { initialCategories?: any[] }) => {
+  const [categories, setCategories] = React.useState<any[]>(initialCategories || []);
+  const [loading, setLoading] = React.useState(!initialCategories);
 
   React.useEffect(() => {
-    fetch('/api/categorias', { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setCategories(data);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    if (!initialCategories) {
+      fetch('/api/categorias', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setCategories(data);
+          }
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
+  }, [initialCategories]);
 
   return (
     <section className="py-20 md:py-24 px-4 bg-white">
@@ -136,10 +166,14 @@ export const CategoriesGrid = () => {
                   {/* Image Area */}
                   <div className="relative h-64 overflow-hidden">
                     {category.imagem ? (
-                      <img 
-                        src={category.imagem} 
-                        alt={category.nome} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      <Image
+                        src={category.imagem}
+                        alt={category.nome}
+                        fill
+                        quality={75}
+                        unoptimized={category.imagem.includes('placehold.co')}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     ) : (
                       <div className="w-full h-full bg-brand-50 flex items-center justify-center">
@@ -150,14 +184,14 @@ export const CategoriesGrid = () => {
 
                   {/* Text Content Below */}
                   <div className="p-8 text-center flex flex-col items-center">
-                    <h3 className="text-xl font-extrabold text-brand-950 mb-2 uppercase tracking-tight group-hover:text-brand-600 transition-colors">
+                    <h3 className="text-xl font-bold text-warm-900 mb-2 uppercase tracking-wide group-hover:text-brand-700 transition-colors">
                       {category.nome}
                     </h3>
                     <p className="text-xs text-warm-500 mb-6 font-medium leading-relaxed">
                       Explore nossa linha premium de produtos para {category.nome.toLowerCase()}.
                     </p>
                     <div className="w-12 h-1 bg-brand-100 mb-6 group-hover:w-20 group-hover:bg-brand-500 transition-all duration-500" />
-                    <span className="text-brand-600 font-black text-[10px] uppercase tracking-[0.2em] inline-flex items-center gap-2">
+                    <span className="text-brand-700 font-bold text-[10px] uppercase tracking-wide inline-flex items-center gap-2">
                       Ver Coleção <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                     </span>
                   </div>
@@ -178,13 +212,22 @@ export const CategoriesGrid = () => {
 export const FeaturedProducts = () => {
   const [products, setProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction === 'left' ? -600 : 600, behavior: 'smooth' });
+    }
+  };
 
   React.useEffect(() => {
     fetch('/api/produtos', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setProducts(data.slice(0, 8));
+          // Ordenar por mais vendidos
+          const sorted = [...data].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+          setProducts(sorted.slice(0, 8));
         }
         setLoading(false);
       })
@@ -192,28 +235,47 @@ export const FeaturedProducts = () => {
   }, []);
 
   return (
-    <section id="mais-vendidos" className="py-20 md:py-24 px-4 bg-warm-50">
+    <section id="mais-vendidos" className="py-20 px-4 bg-warm-50">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+        <div className="flex items-center justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-warm-900 mb-2">Populares agora</h2>
-            <p className="text-warm-500">As escolhas favoritas dos nossos clientes</p>
+            <h2 className="text-3xl font-bold text-warm-900 tracking-tight">Mais vendidos</h2>
+            <p className="text-warm-500 font-medium italic">Os produtos que você mais confia e aprova</p>
           </div>
-          <Link href="/loja" className="text-brand-600 font-bold text-sm hover:text-brand-700">
-            Ver catálogo completo →
+          <Link href="/loja" className="text-brand-600 font-bold text-sm hover:underline">
+            Ver tudo →
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6">
-          {loading ? (
-             [...Array(8)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl h-80 animate-pulse" />
-             ))
-          ) : (
-            products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))
-          )}
+        <div className="relative group/carousel">
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white shadow-xl rounded-full hidden md:flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all -translate-x-1/2 border border-warm-100 hover:bg-brand-50 text-brand-600"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide pb-6 -mx-2 px-2 snap-x snap-mandatory"
+          >
+            {loading ? (
+              [...Array(8)].map((_, i) => (
+                <div key={i} className="shrink-0 w-[220px] md:w-[260px] bg-white rounded-2xl h-80 animate-pulse" />
+              ))
+            ) : (
+              products.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} variant="carousel" />
+              ))
+            )}
+          </div>
+
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white shadow-xl rounded-full hidden md:flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all translate-x-1/2 border border-warm-100 hover:bg-brand-50 text-brand-600"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
       </div>
     </section>
@@ -260,13 +322,20 @@ export const Benefits = () => {
 export const NewArrivals = () => {
   const [products, setProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction === 'left' ? -600 : 600, behavior: 'smooth' });
+    }
+  };
 
   React.useEffect(() => {
     fetch('/api/produtos', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setProducts(data.slice(4, 8));
+          setProducts(data.slice(4, 12));
         }
         setLoading(false);
       })
@@ -274,28 +343,47 @@ export const NewArrivals = () => {
   }, []);
 
   return (
-    <section className="py-20 md:py-24 px-4 bg-white">
+    <section className="py-20 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+        <div className="flex items-center justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-warm-900 mb-2">Novas Tecnologias</h2>
-            <p className="text-warm-500">Últimas adições em nossa linha de cuidados</p>
+            <h2 className="text-3xl font-bold text-warm-900 tracking-tight">Novas Tecnologias</h2>
+            <p className="text-warm-500 font-medium italic">Últimas adições em nossa linha de cuidados</p>
           </div>
-          <Link href="/loja?sort=newest" className="text-brand-600 font-bold text-sm hover:text-brand-700">
-            Explorar todas →
+          <Link href="/loja?sort=newest" className="text-brand-600 font-bold text-sm hover:underline">
+            Ver tudo →
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6">
-          {loading ? (
-            [...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl h-80 animate-pulse" />
-            ))
-          ) : (
-            products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))
-          )}
+        <div className="relative group/carousel">
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white shadow-xl rounded-full hidden md:flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all -translate-x-1/2 border border-warm-100 hover:bg-brand-50 text-brand-600"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide pb-6 -mx-2 px-2 snap-x snap-mandatory"
+          >
+            {loading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="shrink-0 w-[220px] md:w-[260px] bg-white rounded-2xl h-80 animate-pulse" />
+              ))
+            ) : (
+              products.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} variant="carousel" />
+              ))
+            )}
+          </div>
+
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white shadow-xl rounded-full hidden md:flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all translate-x-1/2 border border-warm-100 hover:bg-brand-50 text-brand-600"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
       </div>
     </section>
@@ -310,13 +398,20 @@ export const FlashDeals = () => {
   const [products, setProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [timeLeft, setTimeLeft] = React.useState({ hrs: "00", min: "00", seg: "00" });
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction === 'left' ? -600 : 600, behavior: 'smooth' });
+    }
+  };
 
   React.useEffect(() => {
     fetch('/api/produtos', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setProducts(data.slice(2, 6));
+          setProducts(data.slice(2, 10));
         }
         setLoading(false);
       })
@@ -327,11 +422,11 @@ export const FlashDeals = () => {
       const endOfDay = new Date();
       endOfDay.setHours(23, 59, 59, 999);
       const diff = endOfDay.getTime() - now.getTime();
-      
+
       const hrs = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
       const min = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
       const seg = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-      
+
       setTimeLeft({ hrs, min, seg });
     }, 1000);
 
@@ -353,36 +448,140 @@ export const FlashDeals = () => {
               Selecionamos ofertas exclusivas nos produtos mais essenciais para sua saúde auditiva.
             </p>
           </div>
-          
+
           <div className="bg-white/5 backdrop-blur-md p-8 rounded-3xl border border-white/10 flex flex-col items-center gap-4">
-             <span className="text-[10px] font-black text-brand-400 uppercase tracking-[0.3em]">Encerra em</span>
-             <div className="flex gap-4">
-                {[
-                  { label: "HRS", val: timeLeft.hrs },
-                  { label: "MIN", val: timeLeft.min },
-                  { label: "SEG", val: timeLeft.seg },
-                ].map((timer, i) => (
-                  <div key={i} className="flex flex-col items-center">
-                    <span className="text-3xl md:text-4xl font-bold text-white tabular-nums">{timer.val}</span>
-                    <span className="text-[10px] font-bold text-warm-500 mt-1">{timer.label}</span>
-                  </div>
-                ))}
-             </div>
+            <span className="text-[10px] font-bold text-brand-400 uppercase tracking-wide">Encerra em</span>
+            <div className="flex gap-4">
+              {[
+                { label: "HRS", val: timeLeft.hrs },
+                { label: "MIN", val: timeLeft.min },
+                { label: "SEG", val: timeLeft.seg },
+              ].map((timer, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <span className="text-3xl md:text-4xl font-bold text-white tabular-nums">{timer.val}</span>
+                  <span className="text-[10px] font-bold text-warm-500 mt-1">{timer.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6">
-          {loading ? (
-            [...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white/10 rounded-2xl h-80 animate-pulse" />
-            ))
-          ) : (
-            products.map((product) => (
-              <div key={product.id} className="relative group">
-                <ProductCard product={product} />
-              </div>
-            ))
-          )}
+        <div className="relative group/carousel">
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/10 backdrop-blur-md shadow-xl rounded-full hidden md:flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all -translate-x-1/2 border border-white/10 hover:bg-white/20 text-white"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide pb-6 -mx-2 px-2 snap-x snap-mandatory"
+          >
+            {loading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="shrink-0 w-[220px] md:w-[260px] bg-white/5 rounded-2xl h-80 animate-pulse" />
+              ))
+            ) : (
+              products.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} variant="carousel" />
+              ))
+            )}
+          </div>
+
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/10 backdrop-blur-md shadow-xl rounded-full hidden md:flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all translate-x-1/2 border border-white/10 hover:bg-white/20 text-white"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ═════════════════════════════════════════════════
+   CATÁLOGO POR CATEGORIA
+   ═════════════════════════════════════════════════ */
+
+export const CategoryProductSection = ({ title, categorySlug }: { title: string, categorySlug: string }) => {
+  const [products, setProducts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -600 : 600,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    fetch(`/api/produtos?categoria=${encodeURIComponent(categorySlug)}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          // Ordenar por mais vendidos (garantia extra além da API)
+          const sorted = [...data].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+          setProducts(sorted.slice(0, 8));
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [categorySlug]);
+
+  if (!loading && products.length === 0) return null;
+
+  return (
+    <section className="py-12 px-4 bg-white border-t border-warm-100">
+      <div className="max-w-7xl mx-auto">
+        {/* Header da seção */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-warm-900 tracking-tight">{title}</h2>
+            <p className="text-sm text-warm-500 font-medium">Soluções premium em {title.toLowerCase()}</p>
+          </div>
+          <Link href={`/loja?categoria=${encodeURIComponent(categorySlug)}`} className="text-sm font-bold text-brand-600 hover:underline flex items-center gap-1 group">
+            Ver todos <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
+        {/* Carrossel */}
+        <div className="relative group/carousel">
+          {/* Botão esquerda */}
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white shadow-xl rounded-full hidden md:flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all -translate-x-1/2 border border-warm-100 hover:bg-brand-50 text-brand-600"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+
+          {/* Lista de produtos com scroll horizontal */}
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide pb-6 -mx-2 px-2 snap-x snap-mandatory"
+          >
+            {loading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="shrink-0 w-[220px] md:w-[260px] bg-warm-50 rounded-2xl h-80 animate-pulse" />
+              ))
+            ) : (
+              products.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} variant="carousel" />
+              ))
+            )}
+          </div>
+
+          {/* Botão direita */}
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white shadow-xl rounded-full hidden md:flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all translate-x-1/2 border border-warm-100 hover:bg-brand-50 text-brand-600"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
       </div>
     </section>

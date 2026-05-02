@@ -1,104 +1,233 @@
 "use client";
 
 import * as React from "react";
-import { Package } from "lucide-react";
+import { Package, ChevronLeft, ChevronRight, X } from "lucide-react";
+import Image from "next/image";
+import { createPortal } from "react-dom";
 
 interface ProductGalleryProps {
   images: string[];
+  productName: string;
 }
 
-export const ProductGallery = ({ images }: ProductGalleryProps) => {
+export const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
   const [activeIndex, setActiveIndex] = React.useState(0);
-  const scrollRef = React.useRef<HTMLDivElement>(null);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollLeft = e.currentTarget.scrollLeft;
-    const width = e.currentTarget.offsetWidth;
-    if (width > 0) {
-      const index = Math.round(scrollLeft / width);
-      if (index !== activeIndex) {
-        setActiveIndex(index);
-      }
-    }
-  };
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
 
   const scrollToImage = (index: number) => {
     setActiveIndex(index);
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        left: index * scrollRef.current.offsetWidth,
-        behavior: "smooth"
-      });
-    }
   };
 
+  const nextImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setActiveIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  // Preload all images to avoid delay when switching
+  React.useEffect(() => {
+    if (images && images.length > 0) {
+      images.forEach((src) => {
+        const img = new (window as any).Image();
+        img.src = src;
+      });
+    }
+  }, [images]);
+
+  // Prevent scroll when lightbox is open
+  React.useEffect(() => {
+    if (isLightboxOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isLightboxOpen]);
+
   return (
-    <div className="flex flex-col gap-4 md:gap-5 md:sticky md:top-28">
-      {/* Main Container / Mobile Carousel */}
-      <div className="relative aspect-square md:rounded-3xl overflow-hidden md:border border-brand-100/50 md:shadow-soft-xl group -mx-4 md:mx-0 bg-white">
-        {/* Mobile Indicator (Shopee/ML Style) */}
-        <div className="absolute bottom-4 right-4 z-20 md:hidden bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full tracking-widest">
-           {activeIndex + 1} / {images.length}
-        </div>
+    <div className="flex flex-col lg:flex-row gap-4 items-start">
+      {/* Desktop Thumbnails (Left Side - Amazon Pattern) */}
+      <div className={`hidden lg:flex flex-col gap-3 w-20 shrink-0 pr-1 transition-all duration-500 ${isExpanded ? 'max-h-[600px] overflow-y-auto' : 'h-auto'}`}>
+        {(isExpanded ? images : images.slice(0, 6)).map((img, index) => {
+          const isLastVisible = !isExpanded && index === 5 && images.length > 6;
+          const remainingCount = images.length - 5;
 
-        {/* Badges Overlay */}
-        <div className="absolute top-5 left-5 z-20 flex flex-col gap-2 pointer-events-none">
-           <span className="bg-success text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">Em Estoque</span>
-           <span className="bg-white/90 backdrop-blur-md text-brand-900 border border-brand-100 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">Original KdoisK</span>
-        </div>
+          return (
+            <button
+              key={index}
+              className={`relative aspect-square bg-white rounded-2xl overflow-hidden border-2 transition-all duration-300 shrink-0
+                ${index === activeIndex 
+                  ? "border-brand-600 shadow-md ring-4 ring-brand-100" 
+                  : "border-brand-50 hover:border-brand-200"
+                }
+              `}
+              onMouseEnter={() => !isLastVisible && scrollToImage(index)}
+              onClick={() => {
+                setActiveIndex(index);
+                setIsLightboxOpen(true);
+              }}
+            >
+              <div className="relative aspect-square w-full overflow-hidden">
+                <Image 
+                  src={img} 
+                  alt={`${productName} - ${index + 1}`} 
+                  fill
+                  sizes="120px"
+                  className="object-contain p-2"
+                  quality={75}
+                  priority={false}
+                  loading="lazy"
+                  unoptimized={img.includes('placehold.co')}
+                />
+                {isLastVisible && (
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex flex-col items-center justify-center text-white font-black pointer-events-none">
+                    <span className="text-lg">+{remainingCount}</span>
+                    <span className="text-[8px] uppercase tracking-tighter">Ver mais</span>
+                  </div>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Carousel for Mobile / Main Image for Desktop */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Main Image Container — w-full and aspect-square for mobile */}
         <div 
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="flex md:flex h-full overflow-x-auto md:overflow-hidden snap-x snap-mandatory scrollbar-hide"
+          className="relative w-full aspect-square flex items-center justify-center overflow-hidden rounded-2xl bg-white border border-gray-100 group cursor-zoom-in"
+          onClick={() => setIsLightboxOpen(true)}
         >
-          {images.map((img, index) => (
-            <div key={index} className="shrink-0 w-full h-full snap-center flex items-center justify-center p-8 md:p-12 relative cursor-zoom-in">
-               <img 
-                src={img || "/placeholder-product.png"} 
-                alt={`Product view ${index}`}
-                className="w-full h-full object-contain transition-all duration-700 group-hover:scale-105"
+          {/* Mobile Indicator */}
+          {images.length > 1 && (
+            <div className="absolute bottom-4 right-4 z-20 lg:hidden bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full tracking-widest">
+              {activeIndex + 1} / {images.length}
+            </div>
+          )}
+
+          <div className="relative w-full h-full overflow-hidden">
+            <Image 
+              key={activeIndex}
+              src={images[activeIndex] || 'https://placehold.co/400x400/f9f9f9/cccccc?text=Sem+Imagem'} 
+              alt={productName}
+              fill
+              className="object-contain p-4 transition-all duration-300 ease-out group-hover:scale-105 animate-in fade-in duration-300"
+              quality={75}
+              priority={true}
+              unoptimized={!images[activeIndex] || images[activeIndex].includes('placehold.co')}
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 55vw, 700px"
+            />
+          </div>
+        </div>
+
+        {/* Lightbox Modal */}
+        {isLightboxOpen && typeof document !== "undefined" && createPortal(
+          <div className="fixed inset-0 z-100 flex flex-col items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
+            {/* Close Button */}
+            <button 
+              onClick={() => setIsLightboxOpen(false)}
+              className="absolute top-6 right-6 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all z-110"
+            >
+              <X className="w-8 h-8" />
+            </button>
+
+            {/* Navigation Buttons */}
+            {images.length > 1 && (
+              <>
+                <button 
+                  onClick={prevImage}
+                  className="absolute left-6 p-4 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all z-110"
+                >
+                  <ChevronLeft className="w-10 h-10" />
+                </button>
+                <button 
+                  onClick={nextImage}
+                  className="absolute right-6 p-4 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all z-110"
+                >
+                  <ChevronRight className="w-10 h-10" />
+                </button>
+              </>
+            )}
+
+            {/* Main Image in Lightbox */}
+            <div className="relative w-full h-[70vh] flex items-center justify-center px-4">
+              <Image 
+                src={images[activeIndex]} 
+                alt={productName}
+                fill
+                className="object-contain animate-in zoom-in-95 duration-500"
+                quality={100}
+                priority
               />
             </div>
-          ))}
+
+            {/* Thumbnails in Lightbox */}
+            <div className="mt-8 flex gap-2 overflow-x-auto max-w-[90vw] p-4 scrollbar-hide">
+              {images.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveIndex(index)}
+                  className={`relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300
+                    ${index === activeIndex ? "border-brand-500 scale-110 shadow-lg" : "border-white/10 opacity-50 hover:opacity-100"}
+                  `}
+                >
+                  <Image src={img} alt={`Thumb ${index}`} fill className="object-cover" sizes="64px" />
+                </button>
+              ))}
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Mobile Thumbnails (Horizontal below image) */}
+        <div className="lg:hidden flex gap-2 overflow-x-auto snap-x scrollbar-hide py-3">
+          {(isExpanded ? images : images.slice(0, 6)).map((img, index) => {
+            const isLastVisible = !isExpanded && index === 5 && images.length > 6;
+            const remainingCount = images.length - 5;
+
+            return (
+              <button
+                key={index}
+                className={`relative shrink-0 w-16 h-16 bg-white rounded-2xl overflow-hidden border-2 transition-all duration-300 snap-center
+                  ${index === activeIndex 
+                    ? "border-brand-600 shadow-md ring-4 ring-brand-100" 
+                    : "border-brand-50"
+                  }
+                `}
+                onClick={() => {
+                  setActiveIndex(index);
+                  setIsLightboxOpen(true);
+                }}
+              >
+                <div className="relative aspect-square w-full overflow-hidden">
+                  <Image 
+                    src={img} 
+                    alt={`${productName} - ${index + 1}`} 
+                    fill
+                    sizes="120px"
+                    className="object-contain p-2"
+                    quality={75}
+                    priority={false}
+                    loading="lazy"
+                    unoptimized={img.includes('placehold.co')}
+                  />
+                  {isLastVisible && (
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex flex-col items-center justify-center text-white font-black pointer-events-none">
+                      <span className="text-sm">+{remainingCount}</span>
+                      <span className="text-[6px] uppercase tracking-tighter">Fotos</span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
-      </div>
-
-      {/* Pagination Dots (Mobile Only) */}
-      <div className="flex justify-center gap-1.5 md:hidden">
-         {images.map((_, index) => (
-           <div 
-             key={index} 
-             className={`h-1 rounded-full transition-all duration-300 ${index === activeIndex ? 'w-6 bg-brand-600' : 'w-2 bg-warm-200'}`}
-           />
-         ))}
-      </div>
-
-      {/* Thumbnails (Desktop Only) */}
-      <div className="hidden md:grid grid-cols-5 gap-3">
-        {images.map((img, index) => (
-          <button
-            key={index}
-            className={`relative aspect-square bg-white rounded-2xl overflow-hidden border-2 transition-all duration-300
-              ${index === activeIndex 
-                ? "border-brand-600 shadow-md ring-4 ring-brand-100" 
-                : "border-brand-50 hover:border-brand-200 grayscale-0 hover:grayscale-0"
-              }
-            `}
-            onClick={() => scrollToImage(index)}
-          >
-            <img 
-              src={img} 
-              alt={`Thumbnail ${index}`} 
-              className="w-full h-full object-contain p-2"
-            />
-          </button>
-        ))}
-      </div>
-
-      <div className="hidden md:flex items-center justify-center gap-6 pt-4 text-[10px] font-black text-warm-300 uppercase tracking-widest opacity-60">
-         Compra 100% Segura
       </div>
     </div>
   );

@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
-        return prev.map(item => 
+        return prev.map(item =>
           item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
@@ -64,7 +64,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeFromCart(productId);
       return;
     }
-    setCart(prev => prev.map(item => 
+    setCart(prev => prev.map(item =>
       item.id === productId ? { ...item, quantity } : item
     ));
   };
@@ -75,11 +75,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const itemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ 
-      cart, 
-      addToCart, 
-      removeFromCart, 
-      updateQuantity, 
+    <CartContext.Provider value={{
+      cart,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
       clearCart,
       subtotal,
       itemCount

@@ -84,14 +84,14 @@ export default function CheckoutClient() {
         )}
 
         <div className="flex items-center justify-between mb-10 pb-6 border-b border-brand-100/50">
-          <Link href="/carrinho" className="flex items-center gap-2 text-xs font-bold text-brand-600 hover:text-brand-900 transition-colors uppercase tracking-widest">
+          <Link href="/carrinho" className="flex items-center gap-2 text-xs font-bold text-brand-700 hover:text-brand-900 transition-colors uppercase tracking-wide">
             <ArrowLeft className="w-4 h-4" /> Voltar ao carrinho
           </Link>
           <div className="flex flex-col items-center">
-             <span className="text-xl font-black text-brand-900 tracking-tighter">KdoisK</span>
-             <span className="text-[7px] text-warm-400 font-bold uppercase tracking-[0.3em] -mt-0.5">Checkout Seguro</span>
+             <span className="text-xl font-bold text-warm-900 tracking-tighter">KdoisK</span>
+             <span className="text-[7px] text-warm-400 font-bold uppercase tracking-wide -mt-0.5">Checkout Seguro</span>
           </div>
-          <div className="hidden sm:flex items-center gap-2 text-[10px] font-bold text-success uppercase tracking-widest">
+          <div className="hidden sm:flex items-center gap-2 text-[10px] font-bold text-success uppercase tracking-wide">
             <Lock className="w-3.5 h-3.5" /> Encriptado
           </div>
         </div>
@@ -100,8 +100,8 @@ export default function CheckoutClient() {
           <div className="space-y-6">
             <Card className="p-8">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center font-black text-sm">1</div>
-                <h2 className="text-xl font-bold text-brand-900">Identificação</h2>
+                <div className="w-10 h-10 rounded-full bg-brand-700 text-white flex items-center justify-center font-bold text-sm">1</div>
+                <h2 className="text-xl font-bold text-warm-900">Identificação</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -117,8 +117,8 @@ export default function CheckoutClient() {
 
             <Card className="p-8">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center font-black text-sm">2</div>
-                <h2 className="text-xl font-bold text-brand-900">Endereço de Entrega</h2>
+                <div className="w-10 h-10 rounded-full bg-brand-700 text-white flex items-center justify-center font-bold text-sm">2</div>
+                <h2 className="text-xl font-bold text-warm-900">Endereço de Entrega</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-1 space-y-1.5">
@@ -145,18 +145,18 @@ export default function CheckoutClient() {
                       <Truck className="w-5 h-5 text-accent-400" />
                    </div>
                    <div>
-                      <p className="font-bold text-brand-900 text-sm">Transportadora Premium</p>
-                      <p className="text-[11px] text-brand-600 font-medium">Entrega em até 3 dias úteis</p>
+                      <p className="font-bold text-warm-900 text-sm">Transportadora Premium</p>
+                      <p className="text-[11px] text-brand-700 font-medium">Entrega em até 3 dias úteis</p>
                    </div>
                 </div>
-                <div className="text-sm font-black text-brand-900">GRÁTIS</div>
+                <div className="text-sm font-bold text-warm-900">GRÁTIS</div>
               </div>
             </Card>
 
             <Card className="p-8">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center font-black text-sm">3</div>
-                <h2 className="text-xl font-bold text-brand-900">Pagamento</h2>
+                <div className="w-10 h-10 rounded-full bg-brand-700 text-white flex items-center justify-center font-bold text-sm">3</div>
+                <h2 className="text-xl font-bold text-warm-900">Pagamento</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -164,9 +164,9 @@ export default function CheckoutClient() {
                   onClick={() => setPaymentMethod("pix")}
                   className={`flex items-center gap-4 p-5 rounded-2xl border-2 transition-all text-left ${paymentMethod === "pix" ? "border-brand-600 bg-brand-50/50 shadow-md" : "border-warm-200 hover:border-brand-200"}`}
                 >
-                  <QrCode className={`w-8 h-8 ${paymentMethod === "pix" ? "text-brand-600" : "text-warm-400"}`} />
+                  <QrCode className={`w-8 h-8 ${paymentMethod === "pix" ? "text-brand-700" : "text-warm-400"}`} />
                   <div>
-                    <p className="font-bold text-brand-900">Pix</p>
+                    <p className="font-bold text-warm-900">Pix</p>
                     <p className="text-xs text-success font-bold">5% de desconto</p>
                   </div>
                 </button>
@@ -212,19 +212,19 @@ export default function CheckoutClient() {
 
           <aside className="sticky top-28 space-y-4">
             <Card className="p-6 border-brand-100/40 bg-warm-white shadow-(--shadow-card)">
-              <h3 className="font-bold text-brand-900 mb-6 uppercase tracking-widest text-xs">Resumo do Pedido</h3>
+              <h3 className="font-bold text-warm-900 mb-6 uppercase tracking-wide text-xs">Resumo do Pedido</h3>
               
               <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-xs font-bold text-warm-400 uppercase tracking-widest">
+                <div className="flex justify-between text-xs font-bold text-warm-400 uppercase tracking-wide">
                   <span>Itens ({orderItems.length})</span>
                   <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-xs font-bold text-warm-400 uppercase tracking-widest">
+                <div className="flex justify-between text-xs font-bold text-warm-400 uppercase tracking-wide">
                   <span>Frete</span>
                   <span className="text-success uppercase">Grátis</span>
                 </div>
                 {discount > 0 && (
-                  <div className="flex justify-between text-xs font-bold text-success uppercase tracking-widest">
+                  <div className="flex justify-between text-xs font-bold text-success uppercase tracking-wide">
                     <span>Desconto Pix</span>
                     <span>-{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(discount)}</span>
                   </div>

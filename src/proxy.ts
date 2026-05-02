@@ -1,108 +1,68 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { updateSession } from '@/lib/supabase-middleware'
+import { NextRequest, NextResponse } from 'next/server'
 
-// Rate Limiter em memória (limitado a instâncias locais ou single edge, mas já oferece proteção básica)
-const rateLimitMap = new Map<string, { count: number, timestamp: number }>();
+// Rate Limiting Simples na Memória (LRU Cache)
+// Como o Vercel Edge não suporta lru-cache normal bem (às vezes), 
+// e não foi fornecido um Redis, faremos um controle básico usando uma Map global
+// Note: no ambiente serverless (Vercel), a Map pode resetar entre instâncias.
+// Para produção máxima segurança, recomenda-se Upstash Redis.
+const rateLimitMap = new Map<string, { count: number, resetAt: number }>()
 
-function checkRateLimit(ip: string, route: string, maxRequests: number, windowMs: number): boolean {
-  const key = `${ip}:${route}`;
-  const now = Date.now();
-  const record = rateLimitMap.get(key);
+function checkRateLimit(ip: string, limit: number, windowMs: number) {
+  const now = Date.now()
+  const windowData = rateLimitMap.get(ip)
 
-  if (!record) {
-    rateLimitMap.set(key, { count: 1, timestamp: now });
-    return true;
+  if (!windowData) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs })
+    return { success: true }
   }
 
-  if (now - record.timestamp > windowMs) {
-    rateLimitMap.set(key, { count: 1, timestamp: now });
-    return true;
+  if (now > windowData.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs })
+    return { success: true }
   }
 
-  if (record.count >= maxRequests) {
-    return false;
+  if (windowData.count >= limit) {
+    return { success: false }
   }
 
-  record.count += 1;
-  return true;
+  windowData.count++
+  return { success: true }
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for') || 'unknown';
+  // Aplicar Rate Limit nas Rotas de Auth
+  if (request.nextUrl.pathname.startsWith('/api/auth') || request.method === 'POST') {
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1'
+    let limit = 50 // default
+    let windowMs = 60 * 1000 // 1 minute
 
-  // --- RATE LIMITING ---
-  if (pathname.startsWith('/api/bling/callback')) {
-    if (!checkRateLimit(ip, 'callback', 5, 60000)) { // 5 req/min
-      return new NextResponse('Too Many Requests', { status: 429 });
+    if (request.nextUrl.pathname.includes('/entrar')) {
+      limit = 5 // 5 requests per minute
+    } else if (request.nextUrl.pathname.includes('/cadastrar') || request.nextUrl.pathname.includes('/esqueci-senha')) {
+      limit = 3 // 3 requests per minute
     }
-  }
-  if (pathname.startsWith('/admin/login')) {
-    if (!checkRateLimit(ip, 'login', 10, 60000)) { // 10 req/min
-      return new NextResponse('Too Many Requests', { status: 429 });
-    }
-  }
-  if (pathname.startsWith('/api/checkout')) {
-    if (!checkRateLimit(ip, 'checkout', 20, 60000)) { // 20 req/min
-      return new NextResponse('Too Many Requests', { status: 429 });
-    }
-  }
 
-  // --- API ROUTES PROTECTION ---
-  if (pathname === '/api/bling/sync') {
-    if (request.method !== 'POST') {
-      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    const rateLimit = checkRateLimit(ip, limit, windowMs)
+    if (!rateLimit.success) {
+      console.warn(`[SECURITY] Rate limit exceeded for IP: ${ip}`)
+      return new NextResponse('Too Many Requests', { status: 429 })
     }
   }
 
-  // --- ADMIN AUTH & ROLE VALIDATION ---
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
-    let response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    });
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-            response = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
-          },
-        },
-      }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-    
-    return response;
-  }
-
-  return NextResponse.next();
+  // Atualizar sessão Supabase e verificar rotas (/minha-conta)
+  return await updateSession(request)
 }
 
 export const config = {
   matcher: [
-    '/admin/:path*', 
-    '/api/bling/:path*', 
-    '/api/checkout/:path*',
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}

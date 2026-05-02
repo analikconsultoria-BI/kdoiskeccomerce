@@ -145,8 +145,10 @@ export default function AdminProdutos() {
                 <Timer className="w-5 h-5 text-brand-500" />
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ritmo de Segurança</div>
-                <div className="text-sm font-black text-slate-700">~3 produtos por segundo</div>
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tempo Estimado</div>
+                <div className="text-sm font-black text-slate-700">
+                  ~{Math.ceil((stats.total * 1.5) / 60)} {Math.ceil((stats.total * 1.5) / 60) === 1 ? 'minuto' : 'minutos'}
+                </div>
               </div>
             </div>
 

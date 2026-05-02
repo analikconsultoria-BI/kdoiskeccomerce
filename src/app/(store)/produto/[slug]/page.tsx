@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
+import { ShoppingCart } from "lucide-react";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductInfo } from "@/components/product/ProductInfo";
@@ -16,6 +17,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [relatedProducts, setRelatedProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(false);
+  const router = useRouter();
 
   React.useEffect(() => {
     async function fetchData() {
@@ -65,23 +67,26 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   return (
     <div className="bg-white min-h-screen pb-20 md:pb-0">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="hidden md:block">
+          <Breadcrumb
+            items={[
+              { label: "Loja", href: "/loja" },
+              { label: product.category.name, href: "/loja" },
+              { label: product.name }
+            ]}
+            className="pt-6 pb-2 md:py-6"
+          />
+        </div>
 
-        <Breadcrumb
-          items={[
-            { label: "Loja", href: "/loja" },
-            { label: product.category.name, href: "/loja" },
-            { label: product.name }
-          ]}
-          className="pt-6 pb-2 md:py-6"
-        />
-
-        {/* Main Product Area (2 cols on desktop) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 mb-16">
-          <div className="lg:col-span-6 xl:col-span-7">
-            <ProductGallery images={product.images.length > 0 ? product.images : ["https://placehold.co/600x400/f3f4f6/666666?text=Imagem+Indisponivel"]} />
+        <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-8 mb-8 lg:mb-16 lg:h-[calc(100vh-140px)] min-h-[600px]">
+          <div className="w-full lg:w-[55%] h-full">
+            <ProductGallery 
+              images={product.images.length > 0 ? product.images : ["https://placehold.co/600x400/f3f4f6/666666?text=Imagem+Indisponivel"]} 
+              productName={product.name}
+            />
           </div>
 
-          <div className="lg:col-span-6 xl:col-span-5">
+          <div className="w-full lg:w-[45%] h-full lg:overflow-y-auto lg:pr-4 scrollbar-hide pb-8">
             <ProductInfo product={product} />
           </div>
         </div>
@@ -101,8 +106,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             Quem viu, também viu
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {relatedProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {relatedProducts.map((p, index) => (
+              <ProductCard key={p.id} product={p} index={index} />
             ))}
           </div>
         </div>
@@ -110,7 +115,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
       <ContactBanner />
       
-      <MobileActionsBar product={product} />
+      <MobileActionsBar />
     </div>
   );
 }

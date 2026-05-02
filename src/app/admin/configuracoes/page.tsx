@@ -3,13 +3,16 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Toast } from '@/components/ui/Toast';
-import { Save, Settings, Phone, Mail, Share2, CreditCard, Truck, Percent, Camera, Users, Video, Globe, ShoppingCart } from 'lucide-react';
+import { Save, Settings, Phone, Mail, Share2, CreditCard, Truck, Percent, Camera, Users, Video, Globe, ShoppingCart, ListChecks } from 'lucide-react';
 
 export default function AdminConfiguracoes() {
   const [configs, setConfigs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [activeHomeCategories, setActiveHomeCategories] = useState<string[]>([]);
+  const [loadingCats, setLoadingCats] = useState(true);
 
   const fetchConfigs = async () => {
     const { data } = await supabase.from('configuracoes_loja').select('*');
@@ -17,13 +20,36 @@ export default function AdminConfiguracoes() {
       const map: Record<string, string> = {};
       data.forEach(c => map[c.chave] = c.valor);
       setConfigs(map);
+      
+      if (map['categorias_home_ativas']) {
+        try {
+          setActiveHomeCategories(JSON.parse(map['categorias_home_ativas']));
+        } catch (e) {
+          setActiveHomeCategories([]);
+        }
+      }
     }
     setLoading(false);
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/categorias');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setAvailableCategories(data.map(c => c.nome));
+      }
+    } catch (e) {
+      console.error('Erro ao buscar categorias:', e);
+    } finally {
+      setLoadingCats(false);
+    }
   };
 
   useEffect(() => {
     setMounted(true);
     fetchConfigs();
+    fetchCategories();
   }, []);
 
   if (!mounted) return null;
@@ -38,6 +64,25 @@ export default function AdminConfiguracoes() {
       setMessage({ text: 'Erro ao salvar configuração.', type: 'error' });
     } else {
       setMessage({ text: 'Configuração salva com sucesso!', type: 'success' });
+    }
+  };
+
+  const toggleCategoryHome = async (nome: string) => {
+    const newActive = activeHomeCategories.includes(nome)
+      ? activeHomeCategories.filter(c => c !== nome)
+      : [...activeHomeCategories, nome];
+    
+    setActiveHomeCategories(newActive);
+    
+    const { error } = await supabase.from('configuracoes_loja').upsert({ 
+      chave: 'categorias_home_ativas', 
+      valor: JSON.stringify(newActive) 
+    }, { onConflict: 'chave' });
+
+    if (error) {
+      setMessage({ text: 'Erro ao salvar categorias na home.', type: 'error' });
+    } else {
+      setMessage({ text: 'Lista de categorias atualizada!', type: 'success' });
     }
   };
 
@@ -107,6 +152,49 @@ export default function AdminConfiguracoes() {
             <ConfigItem label="Parcelas Sem Juros" chave="parcelas_sem_juros" value={configs['parcelas_sem_juros']} onChange={handleChange} onSave={handleSave} icon={<CreditCard className="w-4 h-4" />} type="number" />
             <ConfigItem label="Frete Grátis Acima de (R$)" chave="frete_gratis_acima" value={configs['frete_gratis_acima']} onChange={handleChange} onSave={handleSave} icon={<Truck className="w-4 h-4" />} type="number" />
             <ConfigItem label="Desconto PIX (%)" chave="pix_desconto_percent" value={configs['pix_desconto_percent']} onChange={handleChange} onSave={handleSave} icon={<Percent className="w-4 h-4" />} type="number" />
+          </div>
+        </section>
+
+        {/* Categorias na Home */}
+        <section className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6 md:col-span-2">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-indigo-50 rounded-lg">
+              <ListChecks className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Catálogo por Categoria na Home</h3>
+              <p className="text-xs text-slate-500 font-medium italic">Selecione quais categorias devem aparecer como vitrines na página inicial.</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {loadingCats ? (
+              <div className="col-span-full py-4 text-center text-slate-400">Carregando categorias...</div>
+            ) : availableCategories.length === 0 ? (
+              <div className="col-span-full py-4 text-center text-slate-400 italic">Nenhuma categoria encontrada nos produtos ativos.</div>
+            ) : (
+              availableCategories.map((cat) => {
+                const isActive = activeHomeCategories.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => toggleCategoryHome(cat)}
+                    className={`flex items-center justify-between p-4 rounded-2xl border transition-all text-left group ${
+                      isActive 
+                        ? 'bg-indigo-50 border-indigo-200 ring-2 ring-indigo-500/10' 
+                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className={`text-sm font-bold ${isActive ? 'text-indigo-700' : 'text-slate-600'}`}>{cat}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isActive ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300 group-hover:border-slate-400'
+                    }`}>
+                      {isActive && <div className="w-2 h-2 bg-white rounded-full" />}
+                    </div>
+                  </button>
+                );
+              })
+            )}
           </div>
         </section>
       </div>

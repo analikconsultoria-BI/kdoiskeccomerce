@@ -7,19 +7,17 @@
   --color-brand-200: #DDD6FE;
   --color-brand-300: #C4B5FD;
   --color-brand-400: #A78BFA;
-  --color-brand-500: #8B5CF6; /* Electric Purple */
-  --color-brand-600: #7C3AED; /* Brand Primary */
-  --color-brand-700: #6D28D9;
-  --color-brand-800: #5B21B6;
-  --color-brand-900: #4C1D95;
+  --color-brand-500: #7C3AED;
+  --color-brand-600: #6D28D9;
+  --color-brand-700: #5B21B6; /* Brand Primary */
+  --color-brand-800: #4C1D95;
+  --color-brand-900: #3B0764;
   --color-brand-950: #2E1065;
 
   /* ── Conversion Accent: Laranja & Âmbar (E-commerce Gold) ── */
-  --color-accent-100: #FEF3C7;
-  --color-accent-400: #FBBF24;
-  --color-accent-500: #F59E0B; /* High-conversion Button */
-  --color-accent-600: #D97706; /* Urgency / Sale */
-  --color-accent-700: #B45309;
+  --color-accent-400: #FF8C33;
+  --color-accent-500: #FF6B00; /* Main CTA */
+  --color-accent-600: #E55F00;
 
   /* ── Sharp Retail Neutrals ── */
   --color-warm-white: #FFFFFF;
@@ -32,7 +30,7 @@
   --color-warm-600: #475569;
   --color-warm-700: #334155;
   --color-warm-800: #1E293B;
-  --color-warm-900: #0F172A; /* Deep Slate for text */
+  --color-warm-900: #222222; /* Pure professional dark text */
 
   /* ── Funcionais ── */
   --color-success: #059669;
@@ -126,13 +124,15 @@
 }
 
 @layer utilities {
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .hide-scrollbar {
+  .hide-scrollbar,
+  .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   .divider-fade {
